@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/weight_entry.dart';
@@ -20,7 +21,7 @@ class _WeightHistoryScreenState extends State<WeightHistoryScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        title: Text('سجل الوزن والتطور 📉', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text('وزنك وتطورك 📉', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Consumer<AppState>(
@@ -39,7 +40,7 @@ class _WeightHistoryScreenState extends State<WeightHistoryScreen> {
                     _WeightChart(history: history),
                     const SizedBox(height: 24),
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      Text('السجل الأسبوعي', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('سجلك الأسبوعي', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold)),
                       IconButton(
                         icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary),
                         onPressed: () => _showAddWeightDialog(context, state),
@@ -53,7 +54,10 @@ class _WeightHistoryScreenState extends State<WeightHistoryScreen> {
                   (context, index) {
                     final entry = history.reversed.toList()[index];
                     final weekNum = history.length - index;
-                    return _WeightListItem(entry: entry, state: state, weekNum: weekNum);
+                    return _WeightListItem(entry: entry, state: state, weekNum: weekNum)
+                        .animate()
+                        .fadeIn(delay: (index * 100).ms, duration: 400.ms)
+                        .slideX(begin: 0.1, end: 0);
                   },
                   childCount: history.length,
                 ),
@@ -72,7 +76,7 @@ class _WeightHistoryScreenState extends State<WeightHistoryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: Text('تسجيل وزن جديد', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+        title: Text('سجل وزنك الجديد', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
         content: TextField(
           controller: ctrl,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -136,7 +140,7 @@ class _WeightChart extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.95, 0.95));
   }
 }
 
@@ -231,9 +235,9 @@ class _EmptyState extends StatelessWidget {
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       const Icon(Icons.monitor_weight_outlined, size: 80, color: AppColors.cardBorder),
       const SizedBox(height: 16),
-      Text('لا يوجد سجل أوزان بعد', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+      Text('ما فيه سجل أوزان للحين', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
       const SizedBox(height: 8),
-      Text('ابدأ بتسجيل وزنك الأسبوعي لتتبع تطورك', style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textHint)),
+      Text('سجل وزنك كل أسبوع عشان تتابع تطورك الحقيقي!', style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textHint)),
       const SizedBox(height: 24),
       ElevatedButton.icon(
         onPressed: onAdd,

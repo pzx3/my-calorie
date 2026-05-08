@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -24,7 +25,7 @@ class ProfileScreen extends StatelessWidget {
               SliverAppBar(
                 backgroundColor: AppColors.background,
                 pinned: true,
-                title: Text('حسابي 👤',
+                title: Text('إعدادات ملفي 👤',
                     style: GoogleFonts.cairo(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -42,20 +43,20 @@ class ProfileScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(children: [
-                    _AvatarCard(profile: p),
+                    _AvatarCard(profile: p).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
                     const SizedBox(height: 12),
-                    _StatsRow(profile: p),
+                    _StatsRow(profile: p).animate().fadeIn(delay: 100.ms).slideX(begin: -0.05, end: 0),
                     const SizedBox(height: 12),
-                    _GoalsCard(profile: p),
+                    _GoalsCard(profile: p).animate().fadeIn(delay: 200.ms),
                     const SizedBox(height: 12),
-                    _InfoCard(profile: p),
+                    _InfoCard(profile: p).animate().fadeIn(delay: 300.ms),
                     const SizedBox(height: 18),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightHistoryScreen())),
                         icon: const Icon(Icons.analytics_outlined, size: 18),
-                        label: Text('سجل الوزن والتطور الأسبوعي', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold)),
+                        label: Text('تتبع وزنك وتطورك 📈', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -107,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(
             20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('تحديث القياسات',
+          Text('حدث بياناتك',
               style: GoogleFonts.cairo(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -171,7 +172,7 @@ class ProfileScreen extends StatelessWidget {
                   style: GoogleFonts.cairo(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold)),
-              content: Text('سيتم حذف جميع بياناتك وسجلاتك نهائياً ولن تتمكن من استعادتها. هل أنت متأكد؟',
+              content: Text('بتمسح كل بياناتك وسجلاتك للأبد؟ ترى ما تقدر ترجعها بعدين.. متأكد؟',
                   style: GoogleFonts.cairo(color: AppColors.textSecondary)),
               actions: [
                 TextButton(
@@ -310,7 +311,7 @@ class _StatBox extends StatelessWidget {
               style: GoogleFonts.cairo(
                   fontSize: 12, color: AppColors.textSecondary)),
         ]),
-      );
+      ).animate().scale(delay: 150.ms, duration: 300.ms, curve: Curves.easeOut);
 }
 
 class _GoalsCard extends StatelessWidget {
@@ -327,7 +328,7 @@ class _GoalsCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('أهدافي اليومية',
+              Text('أهدافي اليوم',
                   style: GoogleFonts.cairo(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -342,7 +343,7 @@ class _GoalsCard extends StatelessWidget {
                   );
                 },
                 icon: const Icon(Icons.edit_rounded, size: 16, color: AppColors.primary),
-                label: Text('تعديل السعرات', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                label: Text('تغيير السعرات', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -413,7 +414,7 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
               child: Text(
-            'جميع الحسابات (الماء، مؤشر كتلة الجسم، السعرات) مبنية على المعايير المعتمدة من mithaly.sa 🇸🇦.',
+            'كل الحسابات (موية، BMI، سعرات) ماشية على معايير مثالي mithaly.sa 🇸🇦.',
             style: GoogleFonts.cairo(
                 fontSize: 13, color: AppColors.textSecondary, height: 1.6),
           )),
@@ -464,7 +465,7 @@ class _EditCaloriesDialogState extends State<_EditCaloriesDialog> {
         children: [
           Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 24),
-          Text('تعديل السعرات الحرارية', style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Text('تغيير السعرات اليومية', style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 8),
           Text('الاحتياج اليومي (TDEE) بناءً على بياناتك هو $_tdee سعرة', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textSecondary)),
           const SizedBox(height: 32),
@@ -495,7 +496,7 @@ class _EditCaloriesDialogState extends State<_EditCaloriesDialog> {
               child: Row(children: [
                 const Icon(Icons.warning_amber_rounded, color: Colors.red),
                 const SizedBox(width: 12),
-                Expanded(child: Text('تحذر وزارة الصحة من النزول السريع للوزن والأنظمة القاسية، حيث تؤدي إلى إبطاء الحرق، فقدان العضلات، نقص المناعة وتساقط الشعر.', style: GoogleFonts.cairo(fontSize: 12, color: Colors.red))),
+                Expanded(child: Text('تنبهنا وزارة الصحة إن النزول السريع يضر حرقك وعضلاتك.. خلك متوازن وصحي!', style: GoogleFonts.cairo(fontSize: 12, color: Colors.red))),
               ]),
             )
           else if (isTooHigh)

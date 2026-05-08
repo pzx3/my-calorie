@@ -721,7 +721,7 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text('تفعيل إشعارات التذكير', style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textPrimary)),
+                    child: Text('تفعيل تنبيهات التذكير', style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textPrimary)),
                   ),
                   Switch.adaptive(
                     value: _remindersOn,
@@ -743,7 +743,7 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
                     const Icon(Icons.notifications_active_rounded, color: AppColors.water, size: 18),
                     const SizedBox(width: 8),
                     Expanded(child: Text(
-                      'سيتم إرسال $autoDoses إشعار يومياً لتذكيرك بشرب ${_display(perDrink.toDouble())} في كل مرة',
+                      'بنرسل لك $autoDoses تنبيهات يومياً تذكرك تشرب ${_display(perDrink.toDouble())} في كل مرة',
                       style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary, height: 1.5),
                     )),
                   ]),
@@ -760,14 +760,14 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('سيصلك إشعار تجريبي خلال 5 ثوانٍ.. اخرج من التطبيق الآن!', style: GoogleFonts.cairo()),
+                        content: Text('أبشر، بيجيك تنبيه تجريبي خلال 5 ثواني.. جرب تطلع من التطبيق الحين!', style: GoogleFonts.cairo()),
                         backgroundColor: AppColors.water,
                       ),
                     );
                   }
                 },
                 icon: const Icon(Icons.notifications_active_outlined, size: 18, color: AppColors.water),
-                label: Text('إرسال إشعار تجريبي لاختبار النظام', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.water, fontWeight: FontWeight.bold)),
+                label: Text('تجربة إرسال تنبيه تجريبي', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.water, fontWeight: FontWeight.bold)),
               ),
             ),
             

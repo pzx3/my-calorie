@@ -81,8 +81,8 @@ class NotificationService {
         id: 100 + i, // IDs 100-119 for water
         hour: hour,
         minute: minute,
-        title: '💧 $label',
-        body: 'حان وقت ترطيب جسمك! اشرب $amountStr ($time)',
+        title: '💧 وقت الموية ($label)',
+        body: 'يا هلا، جا وقت ترطب جسمك.. اشرب $amountStr وصحتين على قلبك! ($time)',
       );
     }
   }
@@ -108,7 +108,7 @@ class NotificationService {
     final androidDetails = AndroidNotificationDetails(
       channelId,
       channelName,
-      channelDescription: 'تنبيهات منتظمة من التطبيق',
+      channelDescription: 'تنبيهات يومية لتحفيزك والحفاظ على صحتك',
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
@@ -154,8 +154,8 @@ class NotificationService {
       id: 200,
       hour: 8,
       minute: 30,
-      title: '🍳 تذكير الفطور',
-      body: 'صباح الخير! لا تنسَ تسجيل وجبة فطورك لتبقى ملتزماً بهدفك.',
+      title: '🍳 فطورك الصحي',
+      body: 'صباح الخير! لا تنسى تسجل فطورك عشان تضبط سعراتك من بدري.',
       channelId: 'calorie_reminders',
       channelName: 'تذكير الوجبات',
     );
@@ -165,8 +165,8 @@ class NotificationService {
       id: 201,
       hour: 13,
       minute: 30,
-      title: '🥗 تذكير الغداء',
-      body: 'حان وقت الغداء! سجل وجبتك الآن لتعرف ما تبقى لك من سعرات.',
+      title: '🥗 وقت الغداء',
+      body: 'عوافي! سجل غداك الحين وشوف كم باقي لك من سعرات اليوم.',
       channelId: 'calorie_reminders',
       channelName: 'تذكير الوجبات',
     );
@@ -176,8 +176,8 @@ class NotificationService {
       id: 202,
       hour: 19,
       minute: 30,
-      title: '🍽️ تذكير العشاء',
-      body: 'هل انتهيت من العشاء؟ لا تنسَ تسجيل وجبتك الأخيرة لهذا اليوم.',
+      title: '🍽️ وجبة العشاء',
+      body: 'خلصت عشاك؟ لا تنسى تسجله وتختم يومك بأفضل نتيجة.',
       channelId: 'calorie_reminders',
       channelName: 'تذكير الوجبات',
     );
@@ -196,7 +196,7 @@ class NotificationService {
 
     const androidDetails = AndroidNotificationDetails(
       'test_channel',
-      'إشعارات الاختبار',
+      'تنبيهات التجربة',
       channelDescription: 'قناة لاختبار وصول التنبيهات',
       importance: Importance.max,
       priority: Priority.high,
@@ -211,8 +211,8 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       id: 999,
-      title: '🔔 تجربة الإشعارات',
-      body: 'رائع! نظام التنبيهات يعمل بنجاح حتى والتطبيق مغلق.',
+      title: '🔔 تجربة التنبيهات',
+      body: 'أبشرك، التنبيهات شغالة زي اللوز حتى والتطبيق مقفل!',
       scheduledDate: scheduled,
       notificationDetails: const NotificationDetails(android: androidDetails, iOS: iosDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

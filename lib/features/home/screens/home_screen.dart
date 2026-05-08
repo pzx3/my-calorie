@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/food_entry.dart';
@@ -86,7 +87,7 @@ class HomeScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                       color: AppColors.cardBorder, width: 0.5)),
-                              child: const Icon(Icons.notifications_rounded,
+                                child: const Icon(Icons.notifications_rounded,
                                   color: AppColors.textSecondary, size: 18),
                             ),
                           ],
@@ -181,7 +182,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _CalorieCard extends StatelessWidget {
+class _CalorieCard extends StatefulWidget {
   const _CalorieCard(
       {required this.eaten,
       required this.goal,
@@ -193,91 +194,159 @@ class _CalorieCard extends StatelessWidget {
   final AppState state;
 
   @override
+  State<_CalorieCard> createState() => _CalorieCardState();
+}
+
+class _CalorieCardState extends State<_CalorieCard> {
+  bool _showCelebration = false;
+
+  @override
+  void didUpdateWidget(_CalorieCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.eaten >= widget.goal && oldWidget.eaten < oldWidget.goal) {
+      setState(() => _showCelebration = true);
+      Future.delayed(const Duration(seconds: 4), () {
+        if (mounted) setState(() => _showCelebration = false);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final reachedGoal = eaten >= goal;
-    final overEaten = eaten > goal;
+    final reachedGoal = widget.eaten >= widget.goal;
+    final overEaten = widget.eaten > widget.goal;
     final ringColor = reachedGoal ? AppColors.coral : AppColors.primary;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: AppColors.cardGradient,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 6)),
-        ],
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1),
-      ),
-      child: Column(children: [
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 600),
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: ScaleTransition(scale: Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: anim, curve: Curves.bounceOut)), child: child),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: AppColors.cardGradient,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6)),
+            ],
+            border: Border.all(
+                color: reachedGoal ? AppColors.coral.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05), width: 1),
           ),
-          child: eaten > goal
-              ? Padding(
-                  key: const ValueKey('cal_over_v2'),
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Text('تجاوزت هدفك ⚠️',
-                      style: GoogleFonts.cairo(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.coral)))
-              : eaten >= goal
+          child: Column(children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 600),
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.5, end: 1.0).animate(
+                        CurvedAnimation(
+                            parent: anim, curve: Curves.bounceOut)),
+                    child: child),
+              ),
+              child: widget.eaten > widget.goal
                   ? Padding(
-                      key: const ValueKey('cal_done_v2'),
+                      key: const ValueKey('cal_over_v2'),
                       padding: const EdgeInsets.only(bottom: 6),
-                      child: Text('قفلت سعراتك 🔥',
+                      child: Text('تجاوزت هدفك ⚠️',
                           style: GoogleFonts.cairo(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                               color: AppColors.coral)))
-                  : const SizedBox.shrink(key: ValueKey('cal_not_done_v2')),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CalorieIcon(size: 15),
-            const SizedBox(width: 5),
-            Text('السعرات الحرارية',
-                style: GoogleFonts.cairo(
-                    fontSize: 12, color: AppColors.textSecondary)),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          CircularPercentIndicator(
-            radius: 70,
-            lineWidth: 10,
-            percent: percent,
-            animation: true,
-            animationDuration: 800,
-            center: Column(mainAxisSize: MainAxisSize.min, children: [
-              Text('$remaining',
-                  style: GoogleFonts.cairo(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color:
-                          reachedGoal ? AppColors.coral : AppColors.textPrimary)),
-              Text(overEaten ? 'تجاوزت' : 'متبقي',
-                  style: GoogleFonts.cairo(
-                      fontSize: 10, color: AppColors.textSecondary)),
+                  : widget.eaten >= widget.goal
+                      ? Padding(
+                          key: const ValueKey('cal_done_v2'),
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text('قفلت سعراتك 🔥',
+                              style: GoogleFonts.cairo(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.coral)))
+                      : const SizedBox.shrink(key: ValueKey('cal_not_done_v2')),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CalorieIcon(size: 15),
+                const SizedBox(width: 5),
+                Text('السعرات الحرارية',
+                    style: GoogleFonts.cairo(
+                        fontSize: 12, color: AppColors.textSecondary)),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              CircularPercentIndicator(
+                radius: 70,
+                lineWidth: 10,
+                percent: widget.percent,
+                animation: true,
+                animationDuration: 800,
+                center: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Text('${widget.remaining}',
+                      style: GoogleFonts.cairo(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: reachedGoal
+                              ? AppColors.coral
+                              : AppColors.textPrimary)),
+                  Text(overEaten ? 'تجاوزت' : 'متبقي',
+                      style: GoogleFonts.cairo(
+                          fontSize: 10, color: AppColors.textSecondary)),
+                ]),
+                progressColor: ringColor,
+                backgroundColor: AppColors.cardBorder,
+                circularStrokeCap: CircularStrokeCap.round,
+              ),
+              const SizedBox(width: 24),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                _CalorieStat(
+                    label: 'الهدف', value: '${widget.goal}', color: AppColors.teal),
+                const SizedBox(height: 12),
+                _CalorieStat(
+                    label: 'مُتناول',
+                    value: '${widget.eaten}',
+                    color: AppColors.primary),
+                const SizedBox(height: 12),
+                const _CalorieStat(
+                    label: 'محروق', value: '0', color: AppColors.coral),
+              ]),
             ]),
-            progressColor: ringColor,
-            backgroundColor: AppColors.cardBorder,
-            circularStrokeCap: CircularStrokeCap.round,
-          ),
-          const SizedBox(width: 24),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _CalorieStat(label: 'الهدف', value: '$goal', color: AppColors.teal),
-            const SizedBox(height: 12),
-            _CalorieStat(
-                label: 'مُتناول', value: '$eaten', color: AppColors.primary),
-            const SizedBox(height: 12),
-            const _CalorieStat(label: 'محروق', value: '0', color: AppColors.coral),
           ]),
-        ]),
-      ]),
+        ),
+        if (_showCelebration) ...[
+          _ConfettiParticle(emoji: '🎉', delay: 0.ms),
+          _ConfettiParticle(emoji: '✨', delay: 200.ms),
+          _ConfettiParticle(emoji: '🥳', delay: 400.ms),
+          _ConfettiParticle(emoji: '🎊', delay: 600.ms),
+          _ConfettiParticle(emoji: '🎉', delay: 800.ms, isRight: true),
+          _ConfettiParticle(emoji: '🎈', delay: 1000.ms, isRight: true),
+        ],
+      ],
+    ).animate(target: reachedGoal ? 1 : 0).shimmer(duration: 2.seconds, color: Colors.white12).boxShadow(
+      begin: const BoxShadow(color: Colors.transparent, blurRadius: 0),
+      end: BoxShadow(color: AppColors.coral.withValues(alpha: 0.2), blurRadius: 20, spreadRadius: 2),
+    );
+  }
+}
+
+class _ConfettiParticle extends StatelessWidget {
+  const _ConfettiParticle({required this.emoji, required this.delay, this.isRight = false});
+  final String emoji;
+  final Duration delay;
+  final bool isRight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: isRight ? null : 20,
+      right: isRight ? 20 : null,
+      bottom: 20,
+      child: Text(emoji, style: const TextStyle(fontSize: 24))
+          .animate(onPlay: (controller) => controller.repeat(reverse: false))
+          .moveY(begin: 0, end: -200, duration: 1500.ms, delay: delay, curve: Curves.easeOutQuart)
+          .fadeOut(begin: 1.0, delay: delay + 1000.ms, duration: 500.ms)
+          .shake(delay: delay, duration: 1500.ms, hz: 4, curve: Curves.easeInOut),
     );
   }
 }
@@ -315,12 +384,25 @@ class _WaterQuickCard extends StatefulWidget {
 
 class _WaterQuickCardState extends State<_WaterQuickCard> {
   bool _isOz = false;
+  bool _showCelebration = false;
 
   int _ozToMl(int oz) => (oz * 29.5735).round();
   String _mlToOzStr(int ml) => (ml / 29.5735).toStringAsFixed(1);
 
   @override
+  void didUpdateWidget(_WaterQuickCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.waterPct >= 1.0 && oldWidget.waterPct < 1.0) {
+      setState(() => _showCelebration = true);
+      Future.delayed(const Duration(seconds: 4), () {
+        if (mounted) setState(() => _showCelebration = false);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final reachedGoal = widget.waterPct >= 1.0;
     final profile = widget.state.profile;
     final goalUnit = _isOz ? 'oz' : 'لتر';
     final currentUnit = _isOz ? 'oz' : 'مل';
@@ -334,71 +416,99 @@ class _WaterQuickCardState extends State<_WaterQuickCard> {
         ? (profile?.quickAddOz ?? [5, 8, 12, 16])
         : (profile?.quickAddMl ?? [150, 250, 350, 500]);
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.cardBorder, width: 0.5),
-      ),
-      child: Column(children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Row(children: [
-            const WaterIcon(size: 20),
-            const SizedBox(width: 8),
-            Text('الماء اليومي',
-                style: GoogleFonts.cairo(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary)),
-          ]),
-          Row(children: [
-            Text('$displayCurrent $currentUnit / $displayGoal $goalUnit',
-                style: GoogleFonts.cairo(fontSize: 12, color: AppColors.water)),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => setState(() => _isOz = !_isOz),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.water.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(_isOz ? 'oz' : 'ml', 
-                  style: GoogleFonts.cairo(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.water)),
-              ),
-            ),
-          ]),
-        ]),
-        const SizedBox(height: 10),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-              value: widget.waterPct,
-              backgroundColor: AppColors.cardBorder,
-              valueColor: const AlwaysStoppedAnimation(AppColors.water),
-              minHeight: 8),
-        ),
-        const SizedBox(height: 14),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 600),
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: ScaleTransition(scale: Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: anim, curve: Curves.bounceOut)), child: child),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+                color: reachedGoal ? AppColors.water.withValues(alpha: 0.3) : AppColors.cardBorder,
+                width: 0.5),
           ),
-          child: (widget.waterPct >= 1.0)
-              ? Padding(
-                  key: const ValueKey('water_done_v2'),
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('قفلت احتياجك من الماء 💧',
-                      style: GoogleFonts.cairo(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary)))
-              : const SizedBox.shrink(key: ValueKey('water_not_done_v2')),
+          child: Column(children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Row(children: [
+                const WaterIcon(size: 20),
+                const SizedBox(width: 8),
+                Text('الماء اليومي',
+                    style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary)),
+              ]),
+              Row(children: [
+                Text('$displayCurrent $currentUnit / $displayGoal $goalUnit',
+                    style: GoogleFonts.cairo(fontSize: 12, color: AppColors.water)),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => setState(() => _isOz = !_isOz),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.water.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(_isOz ? 'oz' : 'ml', 
+                      style: GoogleFonts.cairo(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.water)),
+                  ),
+                ),
+              ]),
+            ]),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                  value: widget.waterPct,
+                  backgroundColor: AppColors.cardBorder,
+                  valueColor: const AlwaysStoppedAnimation(AppColors.water),
+                  minHeight: 8),
+            ),
+            const SizedBox(height: 14),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 600),
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: ScaleTransition(scale: Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: anim, curve: Curves.bounceOut)), child: child),
+              ),
+              child: (widget.waterPct >= 1.0)
+                  ? Padding(
+                      key: const ValueKey('water_done_v2'),
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text('قفلت احتياجك من الماء 💧',
+                          style: GoogleFonts.cairo(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary)))
+                  : const SizedBox.shrink(key: ValueKey('water_not_done_v2')),
+            ),
+            if (widget.waterPct < 1.0)
+              Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+                for (final amt in amounts.take(4))
+                  _QuickAddBtn(
+                    amount: amt, 
+                    unit: currentUnit,
+                    onTap: () => widget.state.addWater(_isOz ? _ozToMl(amt) : amt)
+                  ),
+              ]),
+          ]),
         ),
-        if (widget.waterPct < 1.0)
-          Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+        if (_showCelebration) ...[
+          _ConfettiParticle(emoji: '🎉', delay: 0.ms),
+          _ConfettiParticle(emoji: '💧', delay: 200.ms),
+          _ConfettiParticle(emoji: '✨', delay: 400.ms),
+          _ConfettiParticle(emoji: '🥤', delay: 600.ms, isRight: true),
+          _ConfettiParticle(emoji: '🥳', delay: 800.ms, isRight: true),
+        ],
+      ],
+    ).animate(target: reachedGoal ? 1 : 0).boxShadow(
+      begin: const BoxShadow(color: Colors.transparent, blurRadius: 0),
+      end: BoxShadow(color: AppColors.water.withValues(alpha: 0.15), blurRadius: 15, spreadRadius: 1),
+    );
+  }
+}spaceAround, children: [
             for (final amt in amounts.take(4))
               _QuickAddBtn(
                 amount: amt, 

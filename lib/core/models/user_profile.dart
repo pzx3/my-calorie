@@ -153,11 +153,11 @@ class UserProfile {
 
       String label;
       if (i == 0) {
-        label = 'أول كوب بعد الاستيقاظ 🌅';
+        label = 'كوب الصباح 🌅';
       } else if (i == doses - 1) {
-        label = 'آخر كوب قبل النوم 🌙';
+        label = 'كوب قبل النوم 🌙';
       } else {
-        label = 'كوب ${i + 1}';
+        label = 'كوب رقم ${i + 1}';
       }
 
       schedule.add({
