@@ -58,13 +58,12 @@ class AppTheme {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                Colors.transparent, // Handled by container gradient
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             shadowColor: AppColors.primary.withValues(alpha: 0.4),
-            elevation: 8,
+            elevation: 4,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 32),
             textStyle:
                 GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),

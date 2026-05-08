@@ -4,7 +4,7 @@ import '../../core/theme/app_colors.dart';
 class AppLogo extends StatelessWidget {
   final double size;
   final bool showShadow;
-  const AppLogo({super.key, this.size = 110, this.showShadow = true});
+  const AppLogo({super.key, this.size = 80, this.showShadow = true});
 
   @override
   Widget build(BuildContext context) {

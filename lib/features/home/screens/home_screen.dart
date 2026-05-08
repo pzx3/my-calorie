@@ -33,12 +33,12 @@ class HomeScreen extends StatelessWidget {
             slivers: [
               // ── App Bar ──
               SliverAppBar(
-                expandedHeight: 120,
+                expandedHeight: 100,
                 pinned: true,
                 backgroundColor: AppColors.background,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 60, 20, 0),
+                    padding: const EdgeInsets.fromLTRB(18, 52, 18, 0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -48,18 +48,18 @@ class HomeScreen extends StatelessWidget {
                             children: [
                               Row(
                                 children: [
-                                  const AppLogo(size: 22, showShadow: false),
-                                  const SizedBox(width: 8),
+                                  const AppLogo(size: 18, showShadow: false),
+                                  const SizedBox(width: 6),
                                   Text('مرحباً، ${profile?.name ?? 'صديقي'} 👋',
                                       style: GoogleFonts.cairo(
-                                          fontSize: 22,
+                                          fontSize: 18,
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.textPrimary)),
                                 ],
                               ),
                               Text(_todayDate(),
                                   style: GoogleFonts.cairo(
-                                      fontSize: 13,
+                                      fontSize: 11,
                                       color: AppColors.textSecondary)),
                             ]),
                         Row(
@@ -67,26 +67,26 @@ class HomeScreen extends StatelessWidget {
                             GestureDetector(
                               onTap: () => MacroSharePreview.show(context),
                               child: Container(
-                                padding: const EdgeInsets.all(10),
+                                padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                     color: AppColors.surface,
-                                    borderRadius: BorderRadius.circular(14),
+                                    borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                         color: AppColors.cardBorder, width: 0.5)),
                                 child: const Icon(Icons.ios_share_rounded,
-                                    color: AppColors.textSecondary, size: 20),
+                                    color: AppColors.textSecondary, size: 18),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                   color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                       color: AppColors.cardBorder, width: 0.5)),
                               child: const Icon(Icons.notifications_rounded,
-                                  color: AppColors.textSecondary, size: 20),
+                                  color: AppColors.textSecondary, size: 18),
                             ),
                           ],
                         ),
@@ -98,7 +98,7 @@ class HomeScreen extends StatelessWidget {
 
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   child: Column(children: [
                     // ── Weight Reminder Banner ──
                     if (state.shouldPromptWeight) ...[
@@ -185,12 +185,12 @@ class _CalorieCard extends StatelessWidget {
     final overEaten = eaten > goal;
     final ringColor = overEaten ? AppColors.coral : AppColors.primary;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: AppColors.cardGradient,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 6)),
         ],
         border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1),
       ),
@@ -204,10 +204,10 @@ class _CalorieCard extends StatelessWidget {
           child: eaten >= goal
               ? Padding(
                   key: const ValueKey('cal_done_v2'),
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: 6),
                   child: Text('قفلت سعراتك 🔥',
                       style: GoogleFonts.cairo(
-                          fontSize: 16,
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary)))
               : const SizedBox.shrink(key: ValueKey('cal_not_done_v2')),
@@ -215,43 +215,43 @@ class _CalorieCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CalorieIcon(size: 18),
-            const SizedBox(width: 6),
+            const CalorieIcon(size: 15),
+            const SizedBox(width: 5),
             Text('السعرات الحرارية',
                 style: GoogleFonts.cairo(
-                    fontSize: 14, color: AppColors.textSecondary)),
+                    fontSize: 12, color: AppColors.textSecondary)),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           CircularPercentIndicator(
-            radius: 85,
-            lineWidth: 12,
+            radius: 70,
+            lineWidth: 10,
             percent: percent,
             animation: true,
             animationDuration: 800,
             center: Column(mainAxisSize: MainAxisSize.min, children: [
               Text('$remaining',
                   style: GoogleFonts.cairo(
-                      fontSize: 30,
+                      fontSize: 24,
                       fontWeight: FontWeight.w900,
                       color:
                           overEaten ? AppColors.coral : AppColors.textPrimary)),
               Text(overEaten ? 'تجاوزت' : 'متبقي',
                   style: GoogleFonts.cairo(
-                      fontSize: 12, color: AppColors.textSecondary)),
+                      fontSize: 10, color: AppColors.textSecondary)),
             ]),
             progressColor: ringColor,
             backgroundColor: AppColors.cardBorder,
             circularStrokeCap: CircularStrokeCap.round,
           ),
-          const SizedBox(width: 32),
+          const SizedBox(width: 24),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             _CalorieStat(label: 'الهدف', value: '$goal', color: AppColors.teal),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _CalorieStat(
                 label: 'مُتناول', value: '$eaten', color: AppColors.primary),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             const _CalorieStat(label: 'محروق', value: '0', color: AppColors.coral),
           ]),
         ]),
@@ -270,10 +270,10 @@ class _CalorieStat extends StatelessWidget {
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
             style: GoogleFonts.cairo(
-                fontSize: 11, color: AppColors.textSecondary)),
+                fontSize: 10, color: AppColors.textSecondary)),
         Text(value,
             style: GoogleFonts.cairo(
-                fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+                fontSize: 15, fontWeight: FontWeight.bold, color: color)),
       ]);
 }
 

@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
                 pinned: true,
                 title: Text('حسابي 👤',
                     style: GoogleFonts.cairo(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary)),
                 centerTitle: true,
@@ -40,55 +40,49 @@ class ProfileScreen extends StatelessWidget {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   child: Column(children: [
-                    // Avatar & name
                     _AvatarCard(profile: p),
-                    const SizedBox(height: 16),
-                    // Stats row
+                    const SizedBox(height: 12),
                     _StatsRow(profile: p),
-                    const SizedBox(height: 16),
-                    // Goals card
+                    const SizedBox(height: 12),
                     _GoalsCard(profile: p),
-                    const SizedBox(height: 16),
-                    // Info card
+                    const SizedBox(height: 12),
                     _InfoCard(profile: p),
-                    const SizedBox(height: 24),
-                    // Weight history button
+                    const SizedBox(height: 18),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightHistoryScreen())),
-                        icon: const Icon(Icons.analytics_outlined),
-                        label: Text('سجل الوزن والتطور الأسبوعي', style: GoogleFonts.cairo(fontWeight: FontWeight.bold)),
+                        icon: const Icon(Icons.analytics_outlined, size: 18),
+                        label: Text('سجل الوزن والتطور الأسبوعي', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    // Reset button
+                    const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: () => _confirmDelete(context, state),
                         icon: const Icon(Icons.delete_outline_rounded,
-                            color: AppColors.coral),
+                            color: AppColors.coral, size: 18),
                         label: Text('حذف الحساب',
                             style: GoogleFonts.cairo(
+                                fontSize: 13,
                                 color: AppColors.coral,
                                 fontWeight: FontWeight.w600)),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: AppColors.coral),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                              borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
                     ),
-
                   ]),
                 ),
               ),
@@ -209,43 +203,43 @@ class _AvatarCard extends StatelessWidget {
   final UserProfile profile;
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
               colors: [AppColors.primary, AppColors.primaryDark],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Row(children: [
           CircleAvatar(
-              radius: 36,
+              radius: 28,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
               child: Text(profile.name.isNotEmpty ? profile.name[0] : '؟',
                   style: GoogleFonts.cairo(
-                      fontSize: 28,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: Colors.white))),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(profile.name,
                 style: GoogleFonts.cairo(
-                    fontSize: 20,
+                    fontSize: 17,
                     fontWeight: FontWeight.bold,
                     color: Colors.white)),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
                 '${profile.age} سنة · ${profile.gender == 'male' ? 'ذكر' : 'أنثى'}',
-                style: GoogleFonts.cairo(fontSize: 13, color: Colors.white70)),
-            const SizedBox(height: 4),
+                style: GoogleFonts.cairo(fontSize: 12, color: Colors.white70)),
+            const SizedBox(height: 3),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(6)),
               child: Text(GoalType.label(profile.goal),
                   style: GoogleFonts.cairo(
-                      fontSize: 12,
+                      fontSize: 10,
                       color: Colors.white,
                       fontWeight: FontWeight.w600)),
             ),
@@ -419,7 +413,7 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
               child: Text(
-            'جميع الحسابات (الماء، مؤشر كتلة الجسم، السعرات) مبنية على المعايير الرسمية لوزارة الصحة السعودية 🇸🇦.',
+            'جميع الحسابات (الماء، مؤشر كتلة الجسم، السعرات) مبنية على المعايير المعتمدة من mithaly.sa 🇸🇦.',
             style: GoogleFonts.cairo(
                 fontSize: 13, color: AppColors.textSecondary, height: 1.6),
           )),

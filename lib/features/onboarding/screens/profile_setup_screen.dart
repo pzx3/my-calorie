@@ -13,17 +13,18 @@ class ProfileSetupScreen extends StatefulWidget {
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
-class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
+class _ProfileSetupScreenState extends State<ProfileSetupScreen>
+    with SingleTickerProviderStateMixin {
   final PageController _pageCtrl = PageController();
   int _page = 0;
-  static const _totalPages = 7;
+  static const _totalPages = 6;
 
   // Form data
   final _nameCtrl = TextEditingController();
   final _ageCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
-  String _gender = 'male';
+  String _gender = '';
   String _activity = 'sedentary';
   String _goal = 'maintain';
   int _wakeHour = 7;
@@ -38,6 +39,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           content: Text(error, style: GoogleFonts.cairo(color: Colors.white)),
           backgroundColor: AppColors.coral,
           behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
@@ -46,7 +48,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     if (_page < _totalPages - 1) {
       _pageCtrl.nextPage(
-          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+          duration: const Duration(milliseconds: 500), curve: Curves.easeOutCubic);
       setState(() => _page++);
     } else {
       _finish();
@@ -58,7 +60,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       case 0:
         return Validator.name(_nameCtrl.text);
       case 1:
-        return Validator.age(_ageCtrl.text);
+        final ageErr = Validator.age(_ageCtrl.text);
+        if (ageErr != null) return ageErr;
+        if (_gender.isEmpty) return 'يرجى اختيار الجنس';
+        return null;
       case 2:
         final hErr = Validator.height(_heightCtrl.text);
         if (hErr != null) return hErr;
@@ -107,6 +112,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLastPage = _page == _totalPages - 1;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -121,41 +127,61 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             children: [
               // Progress bar
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_rounded,
-                              color: AppColors.textSecondary),
-                          onPressed: () {
-                            FocusScope.of(context).unfocus(); // Hide keyboard
+                        GestureDetector(
+                          onTap: () {
+                            FocusScope.of(context).unfocus();
                             if (_page > 0) {
                               _pageCtrl.previousPage(
-                                  duration: const Duration(milliseconds: 400),
-                                  curve: Curves.easeInOut);
+                                  duration: const Duration(milliseconds: 500),
+                                  curve: Curves.easeOutCubic);
                               setState(() => _page--);
                             } else {
                               Navigator.pop(context);
                             }
                           },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.cardBorder, width: 0.5),
+                            ),
+                            child: const Icon(Icons.arrow_back_ios_rounded,
+                                color: AppColors.textSecondary, size: 18),
+                          ),
                         ),
-                        Text('${_page + 1} / $_totalPages',
-                            style: GoogleFonts.cairo(
-                                color: AppColors.textSecondary, fontSize: 14)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text('${_page + 1} / $_totalPages',
+                              style: GoogleFonts.cairo(
+                                  color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w600)),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: (_page + 1) / _totalPages,
-                        backgroundColor: AppColors.cardBorder,
-                        valueColor:
-                            const AlwaysStoppedAnimation(AppColors.primary),
-                        minHeight: 4,
+                    const SizedBox(height: 14),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: (_page + 1) / _totalPages),
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeOutCubic,
+                      builder: (_, value, __) => ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: value,
+                          backgroundColor: AppColors.cardBorder,
+                          valueColor:
+                              const AlwaysStoppedAnimation(AppColors.primary),
+                          minHeight: 5,
+                        ),
                       ),
                     ),
                   ],
@@ -173,7 +199,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         onGender: (v) => setState(() => _gender = v)),
                     _MeasurePage(
                         heightCtrl: _heightCtrl, weightCtrl: _weightCtrl, ageCtrl: _ageCtrl),
-                    _IdealWeightPage(heightCtrl: _heightCtrl, ageCtrl: _ageCtrl),
                     _ActivityPage(
                         selected: _activity,
                         onSelect: (v) => setState(() => _activity = v)),
@@ -188,20 +213,44 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ],
                 ),
               ),
+              // ── Next / Finish Button ──
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
                 child: SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _next,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                  height: 56,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: isLastPage
+                          ? const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark])
+                          : const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    child: Text(_page == _totalPages - 1 ? 'احسب احتياجي ✨' : 'التالي',
-                        style: GoogleFonts.cairo(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: ElevatedButton(
+                      onPressed: _next,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18)),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Text(
+                          isLastPage ? 'احسب احتياجي ✨' : 'التالي',
+                          key: ValueKey(isLastPage),
+                          style: GoogleFonts.cairo(
+                              fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -226,7 +275,7 @@ class _NamePage extends StatelessWidget {
             controller: ctrl,
             textAlign: TextAlign.center,
             style:
-                GoogleFonts.cairo(fontSize: 20, color: AppColors.textPrimary),
+                GoogleFonts.cairo(fontSize: 18, color: AppColors.textPrimary),
             decoration: InputDecoration(
                 hintText: 'اكتب اسمك هنا',
                 hintStyle: GoogleFonts.cairo(color: AppColors.textHint))),
@@ -250,12 +299,12 @@ class _AgePage extends StatelessWidget {
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               style:
-                  GoogleFonts.cairo(fontSize: 20, color: AppColors.textPrimary),
+                  GoogleFonts.cairo(fontSize: 18, color: AppColors.textPrimary),
               decoration: InputDecoration(
-                  hintText: 'عمرك بالسنوات',
+                  hintText: 'عمرك',
                   suffixText: 'سنة',
                   hintStyle: GoogleFonts.cairo(color: AppColors.textHint))),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Row(children: [
             Expanded(
                 child: _GenderBtn(
@@ -288,10 +337,10 @@ class _GenderBtn extends StatelessWidget {
         onTap: () => onTap(value),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: selected == value ? AppColors.primary : AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
                 color: selected == value
                     ? AppColors.primary
@@ -300,7 +349,7 @@ class _GenderBtn extends StatelessWidget {
           child: Text(label,
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.white)),
         ),
@@ -323,17 +372,17 @@ class _MeasurePage extends StatelessWidget {
             controller: heightCtrl,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
-            style: GoogleFonts.cairo(fontSize: 20, color: AppColors.textPrimary),
+            style: GoogleFonts.cairo(fontSize: 18, color: AppColors.textPrimary),
             decoration: InputDecoration(
                 hintText: 'طولك',
                 suffixText: 'سم',
                 hintStyle: GoogleFonts.cairo(color: AppColors.textHint))),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         TextField(
             controller: weightCtrl,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
-            style: GoogleFonts.cairo(fontSize: 20, color: AppColors.textPrimary),
+            style: GoogleFonts.cairo(fontSize: 18, color: AppColors.textPrimary),
             decoration: InputDecoration(
                 hintText: 'وزنك',
                 suffixText: 'كجم',
@@ -343,54 +392,6 @@ class _MeasurePage extends StatelessWidget {
   }
 }
 
-class _IdealWeightPage extends StatelessWidget {
-  const _IdealWeightPage({required this.heightCtrl, required this.ageCtrl});
-  final TextEditingController heightCtrl, ageCtrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final height = double.tryParse(heightCtrl.text) ?? 170;
-    final age = int.tryParse(ageCtrl.text) ?? 25;
-    final ideal = CalorieCalculator.idealWeight(heightCm: height, age: age);
-    final range = CalorieCalculator.healthyWeightRange(heightCm: height);
-
-    return _SetupPage(
-      emoji: '⭐',
-      title: 'وزنك المثالي',
-      subtitle: 'بناءً على طولك وعمرك حسب معايير وزارة الصحة 🇸🇦',
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Icon(Icons.star_rounded, color: AppColors.primary, size: 80),
-        const SizedBox(height: 24),
-        Text(
-          '${ideal.toStringAsFixed(1)} كجم',
-          style: GoogleFonts.cairo(
-            fontSize: 48,
-            fontWeight: FontWeight.w900,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.green.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            'النطاق الصحي: ${range['min']!.toStringAsFixed(0)} - ${range['max']!.toStringAsFixed(0)} كجم',
-            style: GoogleFonts.cairo(fontSize: 13, color: AppColors.green, fontWeight: FontWeight.w600),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'الوصول لهذا الوزن يحسن من طاقتك وصحتك العامة',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textSecondary),
-        ),
-      ]),
-    );
-  }
-}
 
 class _ActivityPage extends StatelessWidget {
   const _ActivityPage({required this.selected, required this.onSelect});
@@ -407,17 +408,14 @@ class _ActivityPage extends StatelessWidget {
                 : _items(onSelect, selected)),
       );
 
-  static List<Widget> _items(ValueChanged<String> onSelect, String selected) =>
-      [
-        _ActivityBtn(
-            value: 'sedentary', selected: selected, onSelect: onSelect),
-        const SizedBox(height: 10),
-        _ActivityBtn(value: 'light', selected: selected, onSelect: onSelect),
-        const SizedBox(height: 10),
-        _ActivityBtn(value: 'moderate', selected: selected, onSelect: onSelect),
-        const SizedBox(height: 10),
-        _ActivityBtn(value: 'active', selected: selected, onSelect: onSelect),
-      ];
+  static List<Widget> _items(ValueChanged<String> onSelect, String selected) {
+    final items = <Widget>[];
+    for (final level in ActivityLevel.all) {
+      if (items.isNotEmpty) items.add(const SizedBox(height: 8));
+      items.add(_ActivityBtn(value: level, selected: selected, onSelect: onSelect));
+    }
+    return items;
+  }
 }
 
 class _ActivityBtn extends StatelessWidget {
@@ -432,29 +430,29 @@ class _ActivityBtn extends StatelessWidget {
       onTap: () => onSelect(value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.15)
               : AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
               color: isSelected ? AppColors.primary : AppColors.cardBorder,
-              width: isSelected ? 2 : 0.5),
+              width: isSelected ? 1.5 : 0.5),
         ),
         child: Row(children: [
           Text(ActivityLevel.emoji(value),
-              style: const TextStyle(fontSize: 22)),
-          const SizedBox(width: 14),
+              style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 10),
           Expanded(
               child: Text(ActivityLevel.label(value),
                   style: GoogleFonts.cairo(
-                      fontSize: 15,
+                      fontSize: 13,
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w500))),
           if (isSelected)
             const Icon(Icons.check_circle_rounded,
-                color: AppColors.primary, size: 22),
+                color: AppColors.primary, size: 18),
         ]),
       ),
     );
@@ -508,24 +506,24 @@ class _GoalBtn extends StatelessWidget {
       onTap: () => onSelect(value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.15) : AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
               color: isSelected ? color : AppColors.cardBorder,
-              width: isSelected ? 2 : 0.5),
+              width: isSelected ? 1.5 : 0.5),
         ),
         child: Row(children: [
-          Text(GoalType.emoji(value), style: const TextStyle(fontSize: 26)),
-          const SizedBox(width: 16),
+          Text(GoalType.emoji(value), style: const TextStyle(fontSize: 22)),
+          const SizedBox(width: 12),
           Text(GoalType.label(value),
               style: GoogleFonts.cairo(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary)),
           const Spacer(),
-          if (isSelected) Icon(Icons.check_circle_rounded, color: color),
+          if (isSelected) Icon(Icons.check_circle_rounded, color: color, size: 20),
         ]),
       ),
     );
@@ -543,35 +541,35 @@ class _SetupPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 22),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
-              Text(emoji, style: const TextStyle(fontSize: 56))
+              const SizedBox(height: 12),
+              Text(emoji, style: const TextStyle(fontSize: 42))
                   .animate(key: ValueKey('emoji_$title'))
                   .scale(duration: 400.ms, curve: Curves.elasticOut)
                   .fadeIn(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               Text(title,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.cairo(
-                      fontSize: 26,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary))
                   .animate(key: ValueKey('title_$title'))
                   .fadeIn(delay: 100.ms)
                   .slideY(begin: 0.2, end: 0),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(subtitle,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.cairo(
-                      fontSize: 14, color: AppColors.textSecondary))
+                      fontSize: 12, color: AppColors.textSecondary))
                   .animate(key: ValueKey('sub_$title'))
                   .fadeIn(delay: 200.ms),
-              const SizedBox(height: 36),
+              const SizedBox(height: 24),
               child.animate(key: ValueKey('child_$title')).fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -673,18 +671,18 @@ class _TimeCard extends StatelessWidget {
         if (picked != null) onChanged(picked.hour);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.cardBorder),
         ),
         child: Column(children: [
-          Text(emoji, style: const TextStyle(fontSize: 30)),
-          const SizedBox(height: 8),
-          Text(label, style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
-          const SizedBox(height: 4),
-          Text('$h12:00 $p', style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Text(emoji, style: const TextStyle(fontSize: 24)),
+          const SizedBox(height: 6),
+          Text(label, style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
+          const SizedBox(height: 3),
+          Text('$h12:00 $p', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         ]),
       ),
     );

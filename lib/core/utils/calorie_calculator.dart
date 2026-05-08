@@ -1,28 +1,32 @@
-/// Evidence-based health calculators aligned with Saudi MOH guidelines.
+/// Evidence-based health calculators aligned with Mithaly.sa standards.
 ///
 /// References:
-///   - وزارة الصحة السعودية (MOH) — حاسبة كتلة الجسم
-///   - وزارة الصحة السعودية (MOH) — حساب احتياج البالغين للماء
+///   - mithaly.sa — حاسبة مؤشر كتلة الجسم
 ///   - BMR: Mifflin-St Jeor equation (ACSM / ADA recommended)
 ///   - TDEE: BMR × activity multiplier (Harris-Benedict revised factors)
 ///
-/// BMI Classification (Saudi MOH / WHO):
+/// BMI Classification (Mithaly.sa):
 ///   < 18.5        → نقص في الوزن (نحافة)
 ///   18.5 – 24.9   → وزن طبيعي
 ///   25.0 – 29.9   → زيادة في الوزن
-///   30.0 – 34.9   → سمنة درجة أولى
-///   35.0 – 39.9   → سمنة درجة ثانية
-///   ≥ 40.0        → سمنة مفرطة
+///   30.0 – 34.9   → سمنة
+///   ≥ 35.0        → سمنة مفرطة
 ///
-/// Water formula (Saudi MOH):
-///   Base: 30-35 مل لكل كيلوجرام من وزن الجسم
-///   Activity adjustment: +5 مل/كجم for active individuals
+/// Water formula (Mithaly.sa):
+///   الوزن (كجم) × 0.033 = احتياج الماء باللتر
 ///
-/// Ideal Weight:
-///   Based on BMI 21.7 (midpoint of MOH healthy range 18.5–24.9)
+/// Ideal Weight (Mithaly.sa):
+///   22 × (الطول بالمتر)²
+///
+/// Activity Levels (Mithaly.sa):
+///   خامل (بدون تمارين):              BMR × 1.2
+///   نشاط خفيف (1-3 أيام/أسبوع):     BMR × 1.375
+///   نشاط متوسط (3-5 أيام/أسبوع):    BMR × 1.55
+///   نشاط عالي (6-7 أيام/أسبوع):     BMR × 1.725
+///   نشاط مكثف (تمارين شاقة جداً):   BMR × 1.9
 class CalorieCalculator {
-  // ──────────────────── BMR ────────────────────
-  /// Mifflin-St Jeor (1990)
+  // ──────────────────── BMR (Mifflin-St Jeor) ────────────────────
+  /// Mifflin-St Jeor (1990) — المعتمدة من mithaly.sa
   /// Men:   (10 × weight_kg) + (6.25 × height_cm) − (5 × age) + 5
   /// Women: (10 × weight_kg) + (6.25 × height_cm) − (5 × age) − 161
   static double bmr({
@@ -35,15 +39,21 @@ class CalorieCalculator {
     return gender == 'male' ? base + 5 : base - 161;
   }
 
-  // ──────────────────── TDEE ────────────────────
-  /// TDEE = BMR × Activity Factor (Harris-Benedict revised)
+  // ──────────────────── TDEE (Mithaly.sa) ────────────────────
+  /// TDEE = BMR × Activity Factor
+  /// Activity levels per mithaly.sa:
+  ///   sedentary:  1.2   — خامل (بدون تمارين)
+  ///   light:      1.375 — نشاط خفيف (1-3 أيام/أسبوع)
+  ///   moderate:   1.55  — نشاط متوسط (3-5 أيام/أسبوع)
+  ///   active:     1.725 — نشاط عالي (6-7 أيام/أسبوع)
+  ///   veryActive: 1.9   — نشاط مكثف (تمارين شاقة جداً)
   static double tdee({required double bmr, required String activityLevel}) {
     const factors = {
-      'sedentary':  1.2,    // Desk job, no exercise
-      'light':      1.375,  // Light exercise 1-3 days/week
-      'moderate':   1.55,   // Moderate exercise 3-5 days/week
-      'active':     1.725,  // Hard exercise 6-7 days/week
-      'veryActive': 1.9,    // 2× training or physical job
+      'sedentary':  1.2,    // خامل (بدون تمارين)
+      'light':      1.375,  // نشاط خفيف (1-3 أيام/أسبوع)
+      'moderate':   1.55,   // نشاط متوسط (3-5 أيام/أسبوع)
+      'active':     1.725,  // نشاط عالي (6-7 أيام/أسبوع)
+      'veryActive': 1.9,    // نشاط مكثف (تمارين شاقة جداً)
     };
     return bmr * (factors[activityLevel] ?? 1.2);
   }
@@ -105,85 +115,62 @@ class CalorieCalculator {
     }
   }
 
-  // ──────────────────── Water Goal (Saudi MOH) ────────────────────
-  /// Water intake calculation based on Saudi MOH guidelines.
+  // ──────────────────── Water Goal (Mithaly.sa) ────────────────────
+  /// Water intake calculation based on Mithaly.sa formula.
   ///
-  /// وزارة الصحة السعودية — حساب احتياج البالغين للماء:
-  ///   القاعدة: 30-35 مل لكل كيلوجرام من وزن الجسم في حالة الراحة
-  ///   يزداد الاحتياج مع زيادة النشاط البدني والأجواء الحارة
+  /// المعادلة: الوزن (كجم) × 0.033 = احتياج الماء باللتر
   ///
-  /// Implementation:
-  ///   Base rate: 30 mL/kg (sedentary / rest)
-  ///   Activity adjustment: +2 mL/kg per activity level step
-  ///   Final rounded to nearest 50 mL
-  ///   Clamped: min 1500 mL, max 5000 mL
+  /// Example: 70 kg × 0.033 = 2.31 liters = 2310 mL
+  ///
+  /// Result rounded to nearest 50 mL and clamped between 1500-5000 mL.
   static int waterGoalMl({
     required double weightKg,
     required String gender,
     String activityLevel = 'sedentary',
   }) {
-    // MOH base: 30 مل/كجم في حالة الراحة
-    // Activity increases rate (Saudi climate consideration +2 mL/kg per level)
-    const mlPerKg = {
-      'sedentary':  30.0,   // راحة تامة — 30 مل/كجم
-      'light':      33.0,   // نشاط خفيف — 33 مل/كجم
-      'moderate':   35.0,   // نشاط متوسط — 35 مل/كجم
-      'active':     38.0,   // نشاط مكثف — 38 مل/كجم
-      'veryActive': 40.0,   // نشاط عالي جداً — 40 مل/كجم
-    };
-    final rate = mlPerKg[activityLevel] ?? 30.0;
-    final waterMl = weightKg * rate;
+    // Mithaly.sa formula: weight × 0.033 liters
+    final waterLiters = weightKg * 0.033;
+    final waterMl = waterLiters * 1000;
 
     // Round to nearest 50 mL for cleanliness
     return ((waterMl / 50).round() * 50).clamp(1500, 5000);
   }
 
-  // ──────────────────── BMI (Saudi MOH / WHO) ────────────────────
+  // ──────────────────── BMI (Mithaly.sa) ────────────────────
   /// BMI = weight(kg) / height(m)²
   static double calculateBMI(double weightKg, double heightCm) =>
       weightKg / ((heightCm / 100) * (heightCm / 100));
 
-  /// BMI classification per Saudi MOH / WHO standards (6 categories)
-  ///   < 18.5        → نقص في الوزن (نحافة)
+  /// BMI classification per Mithaly.sa standards (5 categories)
+  ///   < 18.5        → نقص في الوزن
   ///   18.5 – 24.9   → وزن طبيعي
   ///   25.0 – 29.9   → زيادة في الوزن
-  ///   30.0 – 34.9   → سمنة درجة أولى
-  ///   35.0 – 39.9   → سمنة درجة ثانية
-  ///   ≥ 40.0        → سمنة مفرطة
+  ///   30.0 – 34.9   → سمنة
+  ///   ≥ 35.0        → سمنة مفرطة
   static String bmiCategory(double bmi) {
     if (bmi < 18.5) return 'نقص في الوزن';
     if (bmi < 25.0) return 'وزن طبيعي ✅';
     if (bmi < 30.0) return 'زيادة في الوزن';
-    if (bmi < 35.0) return 'سمنة درجة أولى';
-    if (bmi < 40.0) return 'سمنة درجة ثانية';
+    if (bmi < 35.0) return 'سمنة';
     return 'سمنة مفرطة ⚠️';
   }
 
-  // ──────────────────── Ideal Weight (Saudi MOH) ────────────────────
-  /// Ideal weight = target BMI × height(m)²
+  // ──────────────────── Ideal Weight (Mithaly.sa) ────────────────────
+  /// Ideal weight = 22 × height(m)²
   ///
-  /// Target BMI: 21.7 (midpoint of MOH healthy range 18.5–24.9)
-  /// Age adjustment: slight increase for older adults (+0.03/year over 40)
-  /// as WHO acknowledges slightly higher BMI may be protective in elderly.
+  /// Mithaly.sa uses target BMI of 22 for both males and females.
+  /// Example: height 165 cm → 22 × (1.65)² = 22 × 2.7225 = 59.9 kg
   ///
   /// Clamped between 40-130 kg for safety.
   static double idealWeight({required double heightCm, required int age}) {
     final hMeters = heightCm / 100;
-    // Midpoint of Saudi MOH healthy range (18.5 + 24.9) / 2 = 21.7
-    double targetBmi = 21.7;
-
-    // Minor age adjustment for adults over 40 (WHO consideration)
-    if (age > 40) {
-      targetBmi += (age - 40) * 0.03;
-    }
-
-    // Cap target BMI at 24.9 (upper healthy limit per MOH)
-    targetBmi = targetBmi.clamp(18.5, 24.9);
+    // Mithaly.sa target BMI = 22
+    const targetBmi = 22.0;
 
     return (targetBmi * hMeters * hMeters).clamp(40.0, 130.0);
   }
 
-  /// Returns the healthy weight range per Saudi MOH (BMI 18.5–24.9)
+  /// Returns the healthy weight range (BMI 18.5–24.9)
   static Map<String, double> healthyWeightRange({required double heightCm}) {
     final hMeters = heightCm / 100;
     return {
@@ -219,4 +206,3 @@ class CalorieCalculator {
     };
   }
 }
-

@@ -2,31 +2,38 @@ import 'weight_entry.dart';
 import '../utils/calorie_calculator.dart';
 
 class ActivityLevel {
-  static const String sedentary = 'sedentary';
-  static const String light     = 'light';
-  static const String moderate  = 'moderate';
-  static const String active    = 'active';
+  static const String sedentary  = 'sedentary';
+  static const String light      = 'light';
+  static const String moderate   = 'moderate';
+  static const String active     = 'active';
+  static const String veryActive = 'veryActive';
 
-  /// Activity level labels per Saudi MOH guidelines
+  /// All activity level keys (for UI iteration)
+  static const List<String> all = [sedentary, light, moderate, active, veryActive];
+
+  /// Activity level labels per Mithaly.sa
   static String label(String v) => const {
-    'sedentary': 'خامل (لا يمارس رياضة)',
-    'light':     'نشاط خفيف (1-3 أيام/أسبوع)',
-    'moderate':  'نشاط معتدل (3-5 أيام/أسبوع)',
-    'active':    'نشاط عالي (6-7 أيام/أسبوع)',
+    'sedentary':  'خامل (بدون تمارين)',
+    'light':      'نشاط خفيف (1-3 أيام/أسبوع)',
+    'moderate':   'نشاط متوسط (3-5 أيام/أسبوع)',
+    'active':     'نشاط عالي (6-7 أيام/أسبوع)',
+    'veryActive': 'نشاط مكثف (تمارين شاقة جداً)',
   }[v] ?? 'خامل';
 
   static double multiplier(String v) => const {
-    'sedentary': 1.2,
-    'light':     1.375,
-    'moderate':  1.55,
-    'active':    1.725,
+    'sedentary':  1.2,
+    'light':      1.375,
+    'moderate':   1.55,
+    'active':     1.725,
+    'veryActive': 1.9,
   }[v] ?? 1.2;
 
   static String emoji(String v) => const {
-    'sedentary': '🛋️',
-    'light':     '🚶',
-    'moderate':  '🏃',
-    'active':    '💪',
+    'sedentary':  '🛋️',
+    'light':      '🚶',
+    'moderate':   '🏃',
+    'active':     '💪',
+    'veryActive': '🔥',
   }[v] ?? '🛋️';
 }
 
@@ -89,7 +96,7 @@ class UserProfile {
 
   double get bmi => weightKg / ((heightCm / 100) * (heightCm / 100));
 
-  /// Saudi MOH / WHO BMI classification (6 categories)
+  /// Mithaly.sa BMI classification (5 categories)
   String get bmiCategory => CalorieCalculator.bmiCategory(bmi);
 
   int get awakeMinutes {

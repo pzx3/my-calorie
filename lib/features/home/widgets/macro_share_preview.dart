@@ -13,8 +13,10 @@ class MacroSharePreview extends StatefulWidget {
   const MacroSharePreview({super.key});
 
   static void show(BuildContext context) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => const MacroSharePreview(),
     );
   }
@@ -63,88 +65,124 @@ class _MacroSharePreviewState extends State<MacroSharePreview> {
     final cPct = ((carbs / totalGrams) * 100).round();
     final fPct = ((fat / totalGrams) * 100).round();
 
-    // Matching image colors exactly
-    const Color carbColor = Color(0xFF2DD4BF); // Teal
-    const Color fatColor = Color(0xFFA855F7); // Purple
-    const Color proColor = Color(0xFFFBBF24); // Yellow/Orange
+    const Color carbColor = Color(0xFF2DD4BF);
+    const Color fatColor = Color(0xFFA855F7);
+    const Color proColor = Color(0xFFFBBF24);
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Screenshot(
-            controller: _screenshotController,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E212A), // Very dark slate like the image
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Row(
-                children: [
-                  // Circular Segmented Indicator
-                  SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CustomPaint(
-                          size: const Size(80, 80),
-                          painter: _SegmentedRingPainter(
-                            pPct: pPct.toDouble(),
-                            cPct: cPct.toDouble(),
-                            fPct: fPct.toDouble(),
-                            pColor: proColor,
-                            cColor: carbColor,
-                            fColor: fatColor,
-                          ),
-                        ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(color: AppColors.cardBorder, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 14),
+            Text('معاينة المشاركة', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const SizedBox(height: 14),
+            // Preview Card
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: Screenshot(
+                controller: _screenshotController,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E212A),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: Stack(
+                          alignment: Alignment.center,
                           children: [
-                            Text('$eaten', style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1)),
-                            Text('cal', style: GoogleFonts.cairo(fontSize: 14, color: const Color(0xFF9CA3AF), height: 1.1)),
+                            CustomPaint(
+                              size: const Size(72, 72),
+                              painter: _SegmentedRingPainter(
+                                pPct: pPct.toDouble(),
+                                cPct: cPct.toDouble(),
+                                fPct: fPct.toDouble(),
+                                pColor: proColor,
+                                cColor: carbColor,
+                                fColor: fatColor,
+                              ),
+                            ),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('$eaten', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1)),
+                                Text('cal', style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF), height: 1.1)),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
+                      ),
+                      const Spacer(),
+                      _MacroCol(label: 'Carbs', grams: carbs, pct: cPct, color: carbColor),
+                      const Spacer(),
+                      _MacroCol(label: 'Fat', grams: fat, pct: fPct, color: fatColor),
+                      const Spacer(),
+                      _MacroCol(label: 'Protein', grams: protein, pct: pPct, color: proColor),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Action buttons
+            Row(children: [
+              Expanded(
+                child: SizedBox(
+                  height: 46,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.cardBorder),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: Text('إغلاق', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: SizedBox(
+                  height: 46,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: ElevatedButton.icon(
+                      onPressed: _isSharing ? null : _share,
+                      icon: _isSharing 
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.ios_share_rounded, size: 18),
+                      label: Text('مشاركة', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
                     ),
                   ),
-                  const Spacer(),
-                  // Columns
-                  _MacroCol(label: 'Carbs', grams: carbs, pct: cPct, color: carbColor),
-                  const Spacer(),
-                  _MacroCol(label: 'Fat', grams: fat, pct: fPct, color: fatColor),
-                  const Spacer(),
-                  _MacroCol(label: 'Protein', grams: protein, pct: pPct, color: proColor),
-                ],
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isSharing ? null : _share,
-              icon: _isSharing 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.ios_share_rounded),
-              label: Text('مشاركة', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('إغلاق', style: GoogleFonts.cairo(color: AppColors.textSecondary, fontSize: 14)),
-          ),
-        ],
+            ]),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ],
+        ),
       ),
     );
   }
@@ -161,11 +199,11 @@ class _MacroCol extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('$pct%', style: GoogleFonts.inter(fontSize: 14, color: color, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 4),
-        Text('${grams} g', style: GoogleFonts.inter(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+        Text('$pct%', style: GoogleFonts.inter(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 3),
+        Text('$grams g', style: GoogleFonts.inter(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold)),
         const SizedBox(height: 2),
-        Text(label, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9CA3AF))),
+        Text(label, style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF9CA3AF))),
       ],
     );
   }
@@ -194,19 +232,18 @@ class _SegmentedRingPainter extends CustomPainter {
     final radius = size.width / 2;
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
+      ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
 
-    final gap = 0.2; // Radians gap
+    const gap = 0.2;
 
-    // Active segments count
     int activeCount = 0;
     if (cPct > 0) activeCount++;
     if (fPct > 0) activeCount++;
     if (pPct > 0) activeCount++;
 
     if (activeCount == 0) {
-      paint.color = Colors.grey.withOpacity(0.2);
+      paint.color = Colors.grey.withValues(alpha: 0.2);
       canvas.drawCircle(center, radius, paint);
       return;
     }
@@ -214,9 +251,8 @@ class _SegmentedRingPainter extends CustomPainter {
     final totalGaps = (activeCount > 1) ? activeCount * gap : 0;
     final availableRadians = 2 * pi - totalGaps;
 
-    double currentAngle = -pi / 2; // Start at top
+    double currentAngle = -pi / 2;
 
-    // Carbs
     if (cPct > 0) {
       paint.color = cColor;
       final sweep = (cPct / 100) * availableRadians;
@@ -224,7 +260,6 @@ class _SegmentedRingPainter extends CustomPainter {
       currentAngle += sweep + gap;
     }
 
-    // Fat
     if (fPct > 0) {
       paint.color = fColor;
       final sweep = (fPct / 100) * availableRadians;
@@ -232,7 +267,6 @@ class _SegmentedRingPainter extends CustomPainter {
       currentAngle += sweep + gap;
     }
 
-    // Protein
     if (pPct > 0) {
       paint.color = pColor;
       final sweep = (pPct / 100) * availableRadians;
