@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -32,7 +33,7 @@ class ProgressScreen extends StatelessWidget {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   child: Column(children: [
                     // BMI Card
                     if (profile != null) _BmiCard(profile: profile),
@@ -56,7 +57,7 @@ class ProgressScreen extends StatelessWidget {
                 ),
               ),
             ],
-          );
+          ).animate().fadeIn(duration: 600.ms).moveY(begin: 30, end: 0, curve: Curves.easeOutQuad);
         },
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
@@ -274,6 +275,9 @@ class _NamePage extends StatelessWidget {
         child: TextField(
             controller: ctrl,
             textAlign: TextAlign.center,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s\u0600-\u06FF]')),
+            ],
             style:
                 GoogleFonts.cairo(fontSize: 18, color: AppColors.textPrimary),
             decoration: InputDecoration(
@@ -297,6 +301,7 @@ class _AgePage extends StatelessWidget {
           TextField(
               controller: ctrl,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               textAlign: TextAlign.center,
               style:
                   GoogleFonts.cairo(fontSize: 18, color: AppColors.textPrimary),
@@ -371,6 +376,7 @@ class _MeasurePage extends StatelessWidget {
         TextField(
             controller: heightCtrl,
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             textAlign: TextAlign.center,
             style: GoogleFonts.cairo(fontSize: 18, color: AppColors.textPrimary),
             decoration: InputDecoration(
@@ -381,6 +387,9 @@ class _MeasurePage extends StatelessWidget {
         TextField(
             controller: weightCtrl,
             keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+            ],
             textAlign: TextAlign.center,
             style: GoogleFonts.cairo(fontSize: 18, color: AppColors.textPrimary),
             decoration: InputDecoration(

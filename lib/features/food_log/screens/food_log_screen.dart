@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/food_entry.dart';
-import '../../../core/services/share_service.dart';
 import '../../../core/utils/calorie_calculator.dart';
 import '../../../shared/widgets/macro_row.dart';
 import '../../home/widgets/macro_share_preview.dart';
@@ -23,18 +23,6 @@ class FoodLogScreen extends StatelessWidget {
         centerTitle: true,
         backgroundColor: AppColors.background,
         actions: [
-          IconButton(
-            onPressed: () => MacroSharePreview.show(context),
-            icon: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.cardBorder, width: 0.5),
-              ),
-              child: const Icon(Icons.ios_share_rounded, color: AppColors.textSecondary, size: 18),
-            ),
-          ),
           const SizedBox(width: 8),
         ],
       ),
@@ -57,7 +45,7 @@ class FoodLogScreen extends StatelessWidget {
               const SizedBox(height: 14),
               ...MealType.all.map((m) => _MealLogSection(mealType: m, state: state)),
             ],
-          );
+          ).animate().fadeIn(duration: 600.ms).moveX(begin: 30, end: 0, curve: Curves.easeOutQuad);
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -104,7 +92,7 @@ class _MealLogSection extends StatelessWidget {
             ...entries.map((e) => _FoodRow(entry: e, onDelete: () => state.removeFoodEntry(e.id))),
           ] else
             Padding(
-              padding: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(20),
               child: Text('لا يوجد طعام مسجل', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textHint)),
             ),
         ]),
@@ -129,6 +117,7 @@ class _SectionHeader extends StatelessWidget {
       const Spacer(),
       Text('$totalCal سعرة', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textSecondary)),
       const SizedBox(width: 8),
+      const SizedBox(width: 4),
       GestureDetector(
         onTap: onAdd,
         child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
@@ -182,7 +171,14 @@ class _FoodRow extends StatelessWidget {
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.share_rounded, size: 18, color: AppColors.textSecondary),
-            onPressed: () => ShareService.shareFoodMacros(context, entry),
+            onPressed: () => MacroSharePreview.show(
+              context,
+              calories: entry.calories.round(),
+              protein: entry.protein.round(),
+              carbs: entry.carbs.round(),
+              fat: entry.fat.round(),
+              title: 'ماكروز ${entry.name} 🥗',
+            ),
           ),
         ],
       ),

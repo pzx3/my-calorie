@@ -10,14 +10,33 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 
 class MacroSharePreview extends StatefulWidget {
-  const MacroSharePreview({super.key});
+  const MacroSharePreview({
+    super.key,
+    this.calories,
+    this.protein,
+    this.carbs,
+    this.fat,
+    this.title,
+  });
 
-  static void show(BuildContext context) {
+  final int? calories;
+  final int? protein;
+  final int? carbs;
+  final int? fat;
+  final String? title;
+
+  static void show(BuildContext context, {int? calories, int? protein, int? carbs, int? fat, String? title}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const MacroSharePreview(),
+      builder: (_) => MacroSharePreview(
+        calories: calories,
+        protein: protein,
+        carbs: carbs,
+        fat: fat,
+        title: title,
+      ),
     );
   }
 
@@ -39,11 +58,11 @@ class _MacroSharePreviewState extends State<MacroSharePreview> {
       if (image != null) {
         final file = File(imagePath);
         await file.writeAsBytes(image);
-        final params = ShareParams(
-          text: 'نتائجي اليومية من Mycalorie 🚀',
-          files: [XFile(imagePath)],
+        // ignore: deprecated_member_use
+        await Share.shareXFiles(
+          [XFile(imagePath)],
+          text: '${widget.title ?? "نتائجي اليومية"} من Mycalorie 🚀',
         );
-        await SharePlus.instance.share(params);
       }
     } catch (e) {
       debugPrint('Error capturing screenshot: $e');
@@ -55,10 +74,10 @@ class _MacroSharePreviewState extends State<MacroSharePreview> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    final eaten = state.totalCaloriesToday;
-    final protein = state.proteinToday.round();
-    final carbs = state.carbsToday.round();
-    final fat = state.fatToday.round();
+    final eaten = widget.calories ?? state.totalCaloriesToday;
+    final protein = widget.protein ?? state.proteinToday.round();
+    final carbs = widget.carbs ?? state.carbsToday.round();
+    final fat = widget.fat ?? state.fatToday.round();
     
     final totalGrams = (protein + carbs + fat).clamp(1, double.infinity);
     final pPct = ((protein / totalGrams) * 100).round();
@@ -85,7 +104,7 @@ class _MacroSharePreviewState extends State<MacroSharePreview> {
               decoration: BoxDecoration(color: AppColors.cardBorder, borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 14),
-            Text('معاينة المشاركة', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            Text(widget.title ?? 'معاينة المشاركة', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             const SizedBox(height: 14),
             // Preview Card
             ClipRRect(
@@ -143,37 +162,57 @@ class _MacroSharePreviewState extends State<MacroSharePreview> {
             Row(children: [
               Expanded(
                 child: SizedBox(
-                  height: 46,
+                  height: 48,
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.cardBorder),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      foregroundColor: AppColors.textSecondary,
                     ),
-                    child: Text('إغلاق', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    child: Text('إغلاق', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w600)),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 flex: 2,
-                child: SizedBox(
-                  height: 46,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: ElevatedButton.icon(
-                      onPressed: _isSharing ? null : _share,
-                      icon: _isSharing 
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.ios_share_rounded, size: 18),
-                      label: Text('مشاركة', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _isSharing ? null : _share,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Center(
+                        child: _isSharing
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.share_rounded, color: Colors.white, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'مشاركة النتيجة',
+                                    style: GoogleFonts.cairo(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
                   ),

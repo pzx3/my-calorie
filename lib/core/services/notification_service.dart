@@ -63,7 +63,6 @@ class NotificationService {
 
     for (int i = 0; i < schedule.length; i++) {
       final item   = schedule[i];
-      final time   = item['time'] as String;
       final label  = item['label'] as String;
       final ml     = item['ml'] as int;
       final hour   = item['hour'] as int;
@@ -81,8 +80,8 @@ class NotificationService {
         id: 100 + i, // IDs 100-119 for water
         hour: hour,
         minute: minute,
-        title: '💧 وقت الموية ($label)',
-        body: 'يا هلا، جا وقت ترطب جسمك.. اشرب $amountStr وصحتين على قلبك! ($time)',
+        title: '💧 وقت الترطيب ($label)',
+        body: 'يا هلا، جا وقت ترطب جسمك وتشرب $amountStr.. جعلها بالعافية على قلبك! 🥤',
       );
     }
   }
@@ -147,15 +146,15 @@ class NotificationService {
 
   /// Schedule calorie reminders (Breakfast, Lunch, Dinner)
   Future<void> scheduleCalorieReminders() async {
-    await cancelCalorieReminders();
+    await cancelReminders();
 
     // Breakfast: 8:30 AM
     await _scheduleDailyNotification(
       id: 200,
       hour: 8,
       minute: 30,
-      title: '🍳 فطورك الصحي',
-      body: 'صباح الخير! لا تنسى تسجل فطورك عشان تضبط سعراتك من بدري.',
+      title: '🍳 فطورك الصحي ينتظرك',
+      body: 'صباح الخير والجمال! سجل فطورك الحين وخلنا نبدأ يومنا بهمة عالية. ☀️',
       channelId: 'calorie_reminders',
       channelName: 'تذكير الوجبات',
     );
@@ -165,8 +164,8 @@ class NotificationService {
       id: 201,
       hour: 13,
       minute: 30,
-      title: '🥗 وقت الغداء',
-      body: 'عوافي! سجل غداك الحين وشوف كم باقي لك من سعرات اليوم.',
+      title: '🥗 جا وقت الغداء',
+      body: 'عوافي على قلبك! لا تنسى تسجل غداك عشان تشوف وش باقي لك اليوم. 🍱',
       channelId: 'calorie_reminders',
       channelName: 'تذكير الوجبات',
     );
@@ -177,17 +176,65 @@ class NotificationService {
       hour: 19,
       minute: 30,
       title: '🍽️ وجبة العشاء',
-      body: 'خلصت عشاك؟ لا تنسى تسجله وتختم يومك بأفضل نتيجة.',
+      body: 'بالعافية مقدماً! سجل عشاك واختم يومك بأفضل نتيجة تفتخر فيها. ✨',
       channelId: 'calorie_reminders',
       channelName: 'تذكير الوجبات',
     );
+
+    // Weight Tracker: Saturday 10:00 AM (Weekly)
+    await _scheduleWeeklyNotification(
+      id: 300,
+      day: DateTime.saturday,
+      hour: 10,
+      minute: 0,
+      title: '⚖️ وش صار على الميزان؟',
+      body: 'صباح السبت الجميل، جا وقت تحديث وزنك عشان نشوف التقدم الرهيب اللي حققته! 💪',
+      channelId: 'weight_reminders',
+      channelName: 'تذكير الوزن',
+    );
   }
 
-  /// Cancel calorie reminders
-  Future<void> cancelCalorieReminders() async {
+  /// Cancel calorie and weight reminders
+  Future<void> cancelReminders() async {
     await _plugin.cancel(id: 200);
     await _plugin.cancel(id: 201);
     await _plugin.cancel(id: 202);
+    await _plugin.cancel(id: 300);
+  }
+
+  /// Schedule a weekly repeating notification
+  Future<void> _scheduleWeeklyNotification({
+    required int id,
+    required int day,
+    required int hour,
+    required int minute,
+    required String title,
+    required String body,
+    String channelId = 'general',
+    String channelName = 'تنبيهات عامة',
+  }) async {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+
+    // Find next specified weekday
+    while (scheduled.weekday != day || scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      channelId, channelName,
+      importance: Importance.high, priority: Priority.high,
+      icon: '@mipmap/ic_launcher', playSound: true,
+    );
+    const iosDetails = DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true);
+    
+    await _plugin.zonedSchedule(
+      id: id, title: title, body: body,
+      scheduledDate: scheduled,
+      notificationDetails: NotificationDetails(android: androidDetails, iOS: iosDetails),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+    );
   }
 
   /// Send a test notification after 5 seconds to verify background behavior

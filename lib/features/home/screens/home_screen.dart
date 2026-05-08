@@ -7,7 +7,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/food_entry.dart';
 import '../../../shared/widgets/app_logo.dart';
-import '../widgets/macro_share_preview.dart';
 import '../../food_log/screens/food_log_screen.dart';
 import '../../profile/screens/weight_history_screen.dart';
 import '../../../core/utils/calorie_calculator.dart';
@@ -66,19 +65,6 @@ class HomeScreen extends StatelessWidget {
                             ]),
                         Row(
                           children: [
-                            GestureDetector(
-                              onTap: () => MacroSharePreview.show(context),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                    color: AppColors.surface,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                        color: AppColors.cardBorder, width: 0.5)),
-                                child: const Icon(Icons.ios_share_rounded,
-                                    color: AppColors.textSecondary, size: 18),
-                              ),
-                            ),
                             const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.all(8),
@@ -147,7 +133,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ],
-          );
+          ).animate().fadeIn(duration: 600.ms).moveY(begin: 20, end: 0, curve: Curves.easeOutQuad);
         },
       ),
     );
@@ -198,19 +184,6 @@ class _CalorieCard extends StatefulWidget {
 }
 
 class _CalorieCardState extends State<_CalorieCard> {
-  bool _showCelebration = false;
-
-  @override
-  void didUpdateWidget(_CalorieCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.eaten >= widget.goal && oldWidget.eaten < oldWidget.goal) {
-      setState(() => _showCelebration = true);
-      Future.delayed(const Duration(seconds: 4), () {
-        if (mounted) setState(() => _showCelebration = false);
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final reachedGoal = widget.eaten >= widget.goal;
@@ -220,10 +193,10 @@ class _CalorieCardState extends State<_CalorieCard> {
       clipBehavior: Clip.none,
       children: [
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             gradient: AppColors.cardGradient,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
                   color: Colors.black.withValues(alpha: 0.25),
@@ -277,22 +250,22 @@ class _CalorieCardState extends State<_CalorieCard> {
             const SizedBox(height: 14),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               CircularPercentIndicator(
-                radius: 70,
-                lineWidth: 10,
+                radius: 60,
+                lineWidth: 8,
                 percent: widget.percent,
                 animation: true,
                 animationDuration: 800,
                 center: Column(mainAxisSize: MainAxisSize.min, children: [
                   Text('${widget.remaining}',
                       style: GoogleFonts.cairo(
-                          fontSize: 24,
+                          fontSize: 20,
                           fontWeight: FontWeight.w900,
                           color: reachedGoal
                               ? AppColors.coral
                               : AppColors.textPrimary)),
                   Text(overEaten ? 'تجاوزت' : 'متبقي',
                       style: GoogleFonts.cairo(
-                          fontSize: 10, color: AppColors.textSecondary)),
+                          fontSize: 9, color: AppColors.textSecondary)),
                 ]),
                 progressColor: ringColor,
                 backgroundColor: AppColors.cardBorder,
@@ -314,14 +287,6 @@ class _CalorieCardState extends State<_CalorieCard> {
             ]),
           ]),
         ),
-        if (_showCelebration) ...[
-          _ConfettiParticle(emoji: '🎉', delay: 0.ms),
-          _ConfettiParticle(emoji: '✨', delay: 200.ms),
-          _ConfettiParticle(emoji: '🥳', delay: 400.ms),
-          _ConfettiParticle(emoji: '🎊', delay: 600.ms),
-          _ConfettiParticle(emoji: '🎉', delay: 800.ms, isRight: true),
-          _ConfettiParticle(emoji: '🎈', delay: 1000.ms, isRight: true),
-        ],
       ],
     ).animate(target: reachedGoal ? 1 : 0).shimmer(duration: 2.seconds, color: Colors.white12).boxShadow(
       begin: const BoxShadow(color: Colors.transparent, blurRadius: 0),
@@ -330,26 +295,6 @@ class _CalorieCardState extends State<_CalorieCard> {
   }
 }
 
-class _ConfettiParticle extends StatelessWidget {
-  const _ConfettiParticle({required this.emoji, required this.delay, this.isRight = false});
-  final String emoji;
-  final Duration delay;
-  final bool isRight;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      left: isRight ? null : 20,
-      right: isRight ? 20 : null,
-      bottom: 20,
-      child: Text(emoji, style: const TextStyle(fontSize: 24))
-          .animate(onPlay: (controller) => controller.repeat(reverse: false))
-          .moveY(begin: 0, end: -200, duration: 1500.ms, delay: delay, curve: Curves.easeOutQuart)
-          .fadeOut(begin: 1.0, delay: delay + 1000.ms, duration: 500.ms)
-          .shake(delay: delay, duration: 1500.ms, hz: 4, curve: Curves.easeInOut),
-    );
-  }
-}
 
 class _CalorieStat extends StatelessWidget {
   const _CalorieStat(
@@ -384,21 +329,9 @@ class _WaterQuickCard extends StatefulWidget {
 
 class _WaterQuickCardState extends State<_WaterQuickCard> {
   bool _isOz = false;
-  bool _showCelebration = false;
 
   int _ozToMl(int oz) => (oz * 29.5735).round();
   String _mlToOzStr(int ml) => (ml / 29.5735).toStringAsFixed(1);
-
-  @override
-  void didUpdateWidget(_WaterQuickCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.waterPct >= 1.0 && oldWidget.waterPct < 1.0) {
-      setState(() => _showCelebration = true);
-      Future.delayed(const Duration(seconds: 4), () {
-        if (mounted) setState(() => _showCelebration = false);
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -495,31 +428,12 @@ class _WaterQuickCardState extends State<_WaterQuickCard> {
               ]),
           ]),
         ),
-        if (_showCelebration) ...[
-          _ConfettiParticle(emoji: '🎉', delay: 0.ms),
-          _ConfettiParticle(emoji: '💧', delay: 200.ms),
-          _ConfettiParticle(emoji: '✨', delay: 400.ms),
-          _ConfettiParticle(emoji: '🥤', delay: 600.ms, isRight: true),
-          _ConfettiParticle(emoji: '🥳', delay: 800.ms, isRight: true),
-        ],
       ],
     ).animate(target: reachedGoal ? 1 : 0).boxShadow(
       begin: const BoxShadow(color: Colors.transparent, blurRadius: 0),
       end: BoxShadow(color: AppColors.water.withValues(alpha: 0.15), blurRadius: 15, spreadRadius: 1),
     );
   }
-}spaceAround, children: [
-            for (final amt in amounts.take(4))
-              _QuickAddBtn(
-                amount: amt, 
-                unit: currentUnit,
-                onTap: () => widget.state.addWater(_isOz ? _ozToMl(amt) : amt)
-              ),
-          ]),
-      ]),
-    );
-  }
-
 }
 
 class _QuickAddBtn extends StatelessWidget {
@@ -706,10 +620,10 @@ class _WaterSetupPrompt extends StatelessWidget {
       children: [
         // Disabled gray card background
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: AppColors.surface.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.cardBorder, width: 0.5),
           ),
           child: Column(children: [
@@ -719,7 +633,7 @@ class _WaterSetupPrompt extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text('الماء اليومي',
                     style: GoogleFonts.cairo(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textHint)),
               ]),
@@ -733,18 +647,18 @@ class _WaterSetupPrompt extends StatelessWidget {
                   value: 0,
                   backgroundColor: AppColors.cardBorder,
                   valueColor: AlwaysStoppedAnimation(AppColors.cardBorder),
-                  minHeight: 8),
+                  minHeight: 6),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
               for (final amt in [150, 250, 350, 500])
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                       color: AppColors.cardBorder.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(8)),
                   child: Text('+$amtمل',
-                      style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textHint)),
+                      style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textHint)),
                 ),
             ]),
           ]),
@@ -754,17 +668,17 @@ class _WaterSetupPrompt extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Center(
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                const Icon(Icons.water_drop_outlined, color: Colors.white, size: 32),
-                const SizedBox(height: 8),
-                Text('لم يتم إعداد تتبع الماء بعد',
-                    style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 4),
-                Text('اذهب لصفحة الماء لإعداد جدول شرب الماء 💧',
-                    style: GoogleFonts.cairo(fontSize: 12, color: Colors.white70)),
+                const Icon(Icons.water_drop_outlined, color: Colors.white, size: 24),
+                const SizedBox(height: 6),
+                Text('تتبع الماء غير مُفعل',
+                    style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 2),
+                Text('اذهب لصفحة الماء لإعداد الجدول 💧',
+                    style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70)),
               ]),
             ),
           ),

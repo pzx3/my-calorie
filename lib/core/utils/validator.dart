@@ -2,6 +2,13 @@ class Validator {
   static String? name(String? v) {
     if (v == null || v.trim().isEmpty) return 'يرجى إدخال الاسم';
     if (v.length > 20) return 'الاسم طويل جداً';
+    // Allow letters (including Arabic) and spaces, no numbers
+    if (RegExp(r'[0-9]').hasMatch(v)) {
+      return 'الاسم يجب أن يحتوي على حروف فقط';
+    }
+    if (!RegExp(r'^[a-zA-Z\s\u0600-\u06FF]+$').hasMatch(v)) {
+      return 'يرجى إدخال حروف صحيحة فقط';
+    }
     return null;
   }
 

@@ -32,22 +32,20 @@ class ShareService {
       final fileName = 'food_macros_${DateTime.now().millisecondsSinceEpoch}.png';
 
       if (kIsWeb) {
-        await SharePlus.instance.share(
-          ShareParams(
-            files: [XFile.fromData(image, name: fileName, mimeType: 'image/png')],
-            text: 'ماكروز وجبتي: ${entry.name} 🥗',
-          ),
+        // ignore: deprecated_member_use
+        await Share.shareXFiles(
+          [XFile.fromData(image, name: fileName, mimeType: 'image/png')],
+          text: 'ماكروز وجبتي: ${entry.name} 🥗',
         );
       } else {
         final directory = await getTemporaryDirectory();
         final imageFile = File('${directory.path}/$fileName');
         await imageFile.writeAsBytes(image);
 
-        await SharePlus.instance.share(
-          ShareParams(
-            files: [XFile(imageFile.path)],
-            text: 'ماكروز وجبتي: ${entry.name} 🥗',
-          ),
+        // ignore: deprecated_member_use
+        await Share.shareXFiles(
+          [XFile(imageFile.path)],
+          text: 'ماكروز وجبتي: ${entry.name} 🥗',
         );
       }
     } catch (e) {

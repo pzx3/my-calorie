@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
@@ -19,9 +20,20 @@ class WaterScreen extends StatefulWidget {
 class _WaterScreenState extends State<WaterScreen> {
   bool _isOz = false; // false = ml, true = oz
 
-
   int _ozToMl(int oz) => (oz * 29.5735).round();
   String _mlToOzStr(int ml) => (ml / 29.5735).toStringAsFixed(1);
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(WaterScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Since this is a StatefulWidget, we might need to check if the state changed.
+    // However, build is usually enough if we check the current state.
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,9 +112,13 @@ class _WaterScreenState extends State<WaterScreen> {
                     _UnitToggle(isOz: _isOz, onToggle: () => setState(() => _isOz = !_isOz)),
                     const SizedBox(height: 20),
 
-                    if (profile != null && !profile.waterSetupComplete) ...[
-                      _SetupWaterCard(onTap: () => _showWaterSettings(context, state)),
-                    ] else ...[
+                    if (state.profile?.waterSetupComplete != true)
+                      _SetupWaterCard(
+                        onTap: () => _showWaterSettings(context, state),
+                        recommendedMl: state.profile != null ? (state.profile!.weightKg * 33).round() : 2000,
+                        isOz: _isOz,
+                      )
+                    else ...[
                       if (pct < 1.0) ...[
                         Text('إضافة سريعة', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
                         const SizedBox(height: 10),
@@ -144,7 +160,7 @@ class _WaterScreenState extends State<WaterScreen> {
                 ),
               ),
             ],
-          );
+          ).animate().fadeIn(duration: 600.ms).moveY(begin: 30, end: 0, curve: Curves.easeOutQuad);
         },
       ),
       floatingActionButton: Consumer<AppState>(
@@ -336,7 +352,7 @@ class _WaterBottleState extends State<_WaterBottle> with SingleTickerProviderSta
       return AnimatedBuilder(
         animation: _anim,
         builder: (_, __) => CustomPaint(
-          size: const Size(130, 200),
+          size: const Size(120, 180),
           painter: _WaterPainter(fillPercent: fillValue, wavePhase: _anim.value),
         ),
       );
@@ -350,21 +366,25 @@ class _WaterPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Scaled coordinates for Size(130, 200)
-    final bottleRect  = RRect.fromRectAndRadius(const Offset(15, 30) & const Size(100, 160), const Radius.circular(20));
-    final bottlePaint = Paint()..color = AppColors.cardBorder..style = PaintingStyle.stroke..strokeWidth = 2.5;
-    final bgPaint     = Paint()..color = AppColors.card;
+    // Scaled coordinates for Size(120, 180)
+    final bottleRect  = RRect.fromRectAndRadius(const Offset(15, 30) & const Size(90, 140), const Radius.circular(24));
+    final bottlePaint = Paint()..color = AppColors.water.withValues(alpha: 0.3)..style = PaintingStyle.stroke..strokeWidth = 3.0;
+    final bgPaint     = Paint()..color = AppColors.surface;
     canvas.drawRRect(bottleRect, bgPaint);
 
+    // Glass reflection effect
+    final reflectionPaint = Paint()..color = Colors.white.withValues(alpha: 0.1)..style = PaintingStyle.fill;
+    canvas.drawRRect(RRect.fromRectAndRadius(const Offset(25, 40) & const Size(10, 100), const Radius.circular(5)), reflectionPaint);
+
     // Neck
-    final neckRect = RRect.fromRectAndRadius(const Offset(40, 5) & const Size(50, 30), const Radius.circular(6));
+    final neckRect = RRect.fromRectAndRadius(const Offset(40, 5) & const Size(40, 30), const Radius.circular(8));
     canvas.drawRRect(neckRect, bgPaint);
     canvas.drawRRect(neckRect, bottlePaint);
 
     // Water fill with wave
     if (fillPercent > 0) {
-      final fillHeight = 160 * fillPercent;
-      final waterTop   = 30 + 160 - fillHeight;
+      final fillHeight = 140 * fillPercent;
+      final waterTop   = 30 + 140 - fillHeight;
       final wavePath   = Path();
       wavePath.moveTo(15, size.height);
       wavePath.lineTo(15, waterTop + 8);
@@ -389,14 +409,14 @@ class _WaterPainter extends CustomPainter {
 
     canvas.drawRRect(bottleRect, bottlePaint);
     // Cap
-    canvas.drawRRect(RRect.fromRectAndRadius(const Offset(45, 0) & const Size(40, 10), const Radius.circular(4)), Paint()..color = AppColors.water);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Offset(42, 0) & const Size(36, 12), const Radius.circular(6)), Paint()..color = AppColors.water);
 
     // Percentage text
     final textPainter = TextPainter(
-      text: TextSpan(text: '${(fillPercent * 100).round()}%', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: fillPercent > 0.5 ? Colors.white : AppColors.water)),
+      text: TextSpan(text: '${(fillPercent * 100).round()}%', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 20, color: fillPercent > 0.5 ? Colors.white : AppColors.water)),
       textDirection: TextDirection.ltr,
     )..layout();
-    textPainter.paint(canvas, Offset(65 - textPainter.width / 2, 30 + 80 - textPainter.height / 2));
+    textPainter.paint(canvas, Offset(60 - textPainter.width / 2, 30 + 70 - textPainter.height / 2));
   }
 
   @override
@@ -553,6 +573,11 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
   );
 
   Future<void> _saveAndSchedule() async {
+    if (_preferredCupMl == null || _cupCtrl.text.trim().isEmpty) {
+      setState(() => _cupError = 'يرجى إدخال حجم الكوب');
+      return;
+    }
+
     widget.onSave(
       goalMl: _goalMl.round(),
       wakeHour: _wakeHour,
@@ -583,8 +608,8 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
     final perDrink = preview.perDrinkMl;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      maxChildSize: 0.95,
+      initialChildSize: 0.8,
+      maxChildSize: 0.9,
       minChildSize: 0.5,
       builder: (ctx, scrollCtrl) => Container(
         decoration: const BoxDecoration(
@@ -598,14 +623,14 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
             Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: AppColors.cardBorder, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 14),
             Row(children: [
-              const Icon(Icons.settings_rounded, color: AppColors.water, size: 18),
+              const Icon(Icons.settings_rounded, color: AppColors.water, size: 16),
               const SizedBox(width: 8),
-              Text('إعدادات الماء', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              Text('إعدادات الماء', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             ]),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _SettingSection(title: '🎯 هدف الماء اليومي', child: Column(children: [
-              Text(_display(_goalMl), style: GoogleFonts.cairo(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.water)),
-              Text(_displayLiter(_goalMl), style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textSecondary)),
+              Text(_display(_goalMl), style: GoogleFonts.cairo(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.water)),
+              Text(_displayLiter(_goalMl), style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
               const SizedBox(height: 8),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
@@ -617,17 +642,39 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
                   onChanged: (v) => setState(() => _goalMl = (v / 50).round() * 50.0)),
               ),
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Text(_display(500), style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textHint)),
-                GestureDetector(
-                  onTap: () => setState(() => _goalMl = recommended.toDouble()),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(color: AppColors.water.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-                    child: Text('↩ موصى (${_display(recommended.toDouble())})', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.water, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                Text(_display(5000), style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textHint)),
+                Text(_display(500), style: GoogleFonts.cairo(fontSize: 9, color: AppColors.textHint)),
+                Text(_display(5000), style: GoogleFonts.cairo(fontSize: 9, color: AppColors.textHint)),
               ]),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.water.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.water.withValues(alpha: 0.1)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded, color: AppColors.water, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'الموصى به بناءً على وزنك: ${_display(recommended.toDouble())} (${_displayLiter(recommended.toDouble())})',
+                        style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => setState(() => _goalMl = recommended.toDouble()),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text('تطبيق', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.water, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
             ])),
             const SizedBox(height: 12),
 
@@ -952,26 +999,26 @@ class _WaterScheduleCard extends StatelessWidget {
     final perDrinkDisplay = _fmtAmount(profile.perDrinkMl);
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.cardBorder, width: 0.5)),
+      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.cardBorder, width: 0.5)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
           child: Row(children: [
-            const Icon(Icons.schedule_rounded, color: AppColors.water, size: 20),
-            const SizedBox(width: 8),
-            Text('جدول شرب الماء', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const Icon(Icons.schedule_rounded, color: AppColors.water, size: 14),
+            const SizedBox(width: 6),
+            Text('جدول شرب الماء', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             const Spacer(),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: AppColors.water.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-              child: Text('$perDrinkDisplay / مرة', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.water, fontWeight: FontWeight.bold)),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(color: AppColors.water.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
+              child: Text('$perDrinkDisplay / مرة', style: GoogleFonts.cairo(fontSize: 9, color: AppColors.water, fontWeight: FontWeight.bold)),
             ),
           ]),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-          child: Text('${profile.waterIntervals} كوب من ${_fmtH(profile.wakeHour)} إلى ${_fmtH(profile.sleepHour)}',
-              style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          child: Text('${profile.waterIntervals} كوب: ${_fmtH(profile.wakeHour)} - ${_fmtH(profile.sleepHour)}',
+              style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary)),
         ),
         const Divider(color: AppColors.cardBorder, height: 8),
         ...List.generate(schedule.length, (i) {
@@ -982,39 +1029,39 @@ class _WaterScheduleCard extends StatelessWidget {
           final label = item['label'] as String;
           final amountStr = _fmtAmount(ml);
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                width: 28, height: 28,
+                width: 20, height: 20,
                 decoration: BoxDecoration(
                   color: done ? AppColors.water : Colors.transparent,
                   shape: BoxShape.circle,
-                  border: Border.all(color: done ? AppColors.water : AppColors.cardBorder, width: 2),
+                  border: Border.all(color: done ? AppColors.water : AppColors.cardBorder, width: 1.5),
                 ),
-                child: done ? const Icon(Icons.check_rounded, color: Colors.white, size: 16) : null,
+                child: done ? const Icon(Icons.check_rounded, color: Colors.white, size: 12) : null,
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 10),
               Expanded(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label, style: GoogleFonts.cairo(
-                    fontSize: 11,
+                    fontSize: 9,
                     color: done ? AppColors.textHint : AppColors.textSecondary,
                   )),
                   Text('$time — $amountStr', style: GoogleFonts.cairo(
-                    fontSize: 13,
+                    fontSize: 11,
                     color: done ? AppColors.textSecondary : AppColors.textPrimary,
                     fontWeight: done ? FontWeight.normal : FontWeight.w600,
                     decoration: done ? TextDecoration.lineThrough : null,
                   )),
                 ],
               )),
-              if (done) const Text('✅', style: TextStyle(fontSize: 14)),
+              if (done) const Text('✅', style: TextStyle(fontSize: 12)),
             ]),
           );
         }),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
       ]),
     );
   }
@@ -1057,38 +1104,45 @@ class _UnitBtn extends StatelessWidget {
 }
 
 class _SetupWaterCard extends StatelessWidget {
-  const _SetupWaterCard({required this.onTap});
+  const _SetupWaterCard({required this.onTap, required this.recommendedMl, required this.isOz});
   final VoidCallback onTap;
+  final int recommendedMl;
+  final bool isOz;
+
+  String _display(int ml) {
+    if (isOz) return '${(ml / 29.5735).toStringAsFixed(1)} oz';
+    return '$ml مل';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.water.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(children: [
-        const Icon(Icons.water_drop_rounded, color: AppColors.water, size: 48),
-        const SizedBox(height: 16),
-        Text('إعداد جدول شرب الماء', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-        const SizedBox(height: 8),
-        Text('للحصول على أفضل النتائج وتذكيرات دقيقة، يرجى تحديد حجم الكوب المفضل لديك وأوقات شرب الماء.', 
+        const Icon(Icons.water_drop_rounded, color: AppColors.water, size: 20),
+        const SizedBox(height: 6),
+        Text('تحتاج إلى ${_display(recommendedMl)} يومياً 💧', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        const SizedBox(height: 4),
+        Text('ابدأ إعداد جدول شرب الماء وتفعيل التذكيرات.', 
           textAlign: TextAlign.center,
-          style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textSecondary, height: 1.5)),
-        const SizedBox(height: 24),
+          style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary, height: 1.3)),
+        const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: onTap,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.water,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: Text('ابدأ الإعداد الآن 🚀', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+            child: Text('ابدأ الإعداد الآن 🚀', style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ),
       ]),

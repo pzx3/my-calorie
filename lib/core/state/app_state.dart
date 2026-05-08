@@ -49,6 +49,12 @@ class AppState extends ChangeNotifier {
   double get carbsToday   => todayFood.fold(0.0, (s, e) => s + e.carbs);
   double get fatToday     => todayFood.fold(0.0, (s, e) => s + e.fat);
 
+  bool get canCelebrateCalories => false;
+  void markCalorieCelebrated() {}
+
+  bool get canCelebrateWater => false;
+  void markWaterCelebrated() {}
+
   List<FoodEntry> entriesForMeal(String mealType) =>
       todayFood.where((e) => e.mealType == mealType).toList();
 

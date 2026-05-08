@@ -88,7 +88,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ],
-          );
+          ).animate().fadeIn(duration: 600.ms).moveY(begin: 30, end: 0, curve: Curves.easeOutQuad);
         },
       ),
     );
