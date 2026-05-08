@@ -27,7 +27,7 @@ class ProfileScreen extends StatelessWidget {
                 pinned: true,
                 title: Text('إعدادات ملفي 👤',
                     style: GoogleFonts.cairo(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary)),
                 centerTitle: true,
@@ -55,12 +55,12 @@ class ProfileScreen extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightHistoryScreen())),
-                        icon: const Icon(Icons.analytics_outlined, size: 18),
-                        label: Text('تتبع وزنك وتطورك 📈', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold)),
+                        icon: const Icon(Icons.analytics_outlined, size: 16),
+                        label: Text('تتبع وزنك وتطورك 📈', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
                       ),
                     ),
@@ -70,17 +70,17 @@ class ProfileScreen extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: () => _confirmDelete(context, state),
                         icon: const Icon(Icons.delete_outline_rounded,
-                            color: AppColors.coral, size: 18),
+                            color: AppColors.coral, size: 16),
                         label: Text('حذف الحساب',
                             style: GoogleFonts.cairo(
-                                fontSize: 13,
+                                fontSize: 12,
                                 color: AppColors.coral,
                                 fontWeight: FontWeight.w600)),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: AppColors.coral),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                              borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
                       ),
                     ),
@@ -204,28 +204,28 @@ class _AvatarCard extends StatelessWidget {
   final UserProfile profile;
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
               colors: [AppColors.primary, AppColors.primaryDark],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Row(children: [
           CircleAvatar(
-              radius: 28,
+              radius: 24,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
               child: Text(profile.name.isNotEmpty ? profile.name[0] : '؟',
                   style: GoogleFonts.cairo(
-                      fontSize: 22,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.white))),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(profile.name,
                 style: GoogleFonts.cairo(
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Colors.white)),
             const SizedBox(height: 3),
@@ -297,19 +297,19 @@ class _StatBox extends StatelessWidget {
   final Color color;
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.cardBorder, width: 0.5)),
         child: Column(children: [
           Text('$value$unit',
               style: GoogleFonts.cairo(
-                  fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+                  fontSize: 16, fontWeight: FontWeight.bold, color: color)),
           const SizedBox(height: 4),
           Text(label,
               style: GoogleFonts.cairo(
-                  fontSize: 12, color: AppColors.textSecondary)),
+                  fontSize: 11, color: AppColors.textSecondary)),
         ]),
       ).animate().scale(delay: 150.ms, duration: 300.ms, curve: Curves.easeOut);
 }
@@ -319,10 +319,10 @@ class _GoalsCard extends StatelessWidget {
   final UserProfile profile;
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.cardBorder, width: 0.5)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(
@@ -330,7 +330,7 @@ class _GoalsCard extends StatelessWidget {
             children: [
               Text('أهدافي اليوم',
                   style: GoogleFonts.cairo(
-                      fontSize: 15,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary)),
               TextButton.icon(
@@ -342,8 +342,8 @@ class _GoalsCard extends StatelessWidget {
                     builder: (_) => _EditCaloriesDialog(profile: profile),
                   );
                 },
-                icon: const Icon(Icons.edit_rounded, size: 16, color: AppColors.primary),
-                label: Text('تغيير السعرات', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                icon: const Icon(Icons.edit_rounded, size: 14, color: AppColors.primary),
+                label: Text('تغيير السعرات', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -381,19 +381,19 @@ class _GoalRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(children: [
         Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: color, size: 18)),
-        const SizedBox(width: 12),
+                borderRadius: BorderRadius.circular(8)),
+            child: Icon(icon, color: color, size: 16)),
+        const SizedBox(width: 10),
         Text(label,
             style: GoogleFonts.cairo(
-                fontSize: 14, color: AppColors.textSecondary)),
+                fontSize: 12, color: AppColors.textSecondary)),
         const Spacer(),
         Text(value,
             style: GoogleFonts.cairo(
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary)),
       ]);
@@ -404,19 +404,19 @@ class _InfoCard extends StatelessWidget {
   final UserProfile profile;
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.primary.withValues(alpha: 0.2))),
         child: Row(children: [
-          const Icon(Icons.info_outline_rounded, color: AppColors.primary),
-          const SizedBox(width: 12),
+          const Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 20),
+          const SizedBox(width: 10),
           Expanded(
               child: Text(
-            'كل الحسابات (موية، BMI، سعرات) ماشية على معايير مثالي mithaly.sa 🇸🇦.',
+            'كل الحسابات (موية، BMI، سعرات) تتبع معايير مثالي mithaly.sa 🇸🇦.',
             style: GoogleFonts.cairo(
-                fontSize: 13, color: AppColors.textSecondary, height: 1.6),
+                fontSize: 11, color: AppColors.textSecondary, height: 1.5),
           )),
         ]),
       );
