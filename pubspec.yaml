@@ -1,4 +1,4 @@
-name: mysairati
+name: mycalorie
 description: تطبيق حساب السعرات الحرارية وتتبع شرب الماء
 publish_to: 'none'
 version: 1.0.0+1
@@ -31,6 +31,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true

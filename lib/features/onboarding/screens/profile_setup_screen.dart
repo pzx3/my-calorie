@@ -218,8 +218,8 @@ class _NamePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _SetupPage(
         emoji: '👋',
-        title: 'ما اسمك؟',
-        subtitle: 'نريد نعرف كيف ننادي عليك',
+        title: 'وش اسمك؟',
+        subtitle: '',
         child: TextField(
             controller: ctrl,
             textAlign: TextAlign.center,
