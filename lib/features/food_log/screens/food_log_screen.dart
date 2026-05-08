@@ -159,25 +159,24 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
   @override
   void initState() { super.initState(); _selectedMeal = widget.initialMeal; }
 
+  String? _nameError;
+  String? _calError;
+
   void _add(BuildContext ctx) {
     final name = _nameCtrl.text.trim();
     final cal  = double.tryParse(_calCtrl.text);
-    if (name.isEmpty || cal == null || cal <= 0) {
-      ScaffoldMessenger.of(ctx).showSnackBar(
-        SnackBar(
-          content: Text('الرجاء إدخال اسم الطعام والسعرات', style: GoogleFonts.cairo(color: Colors.white)),
-          backgroundColor: AppColors.coral,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      return;
-    }
+    
+    setState(() {
+      _nameError = name.isEmpty ? 'اسم الطعام مطلوب' : null;
+      _calError = (cal == null || cal <= 0) ? 'مطلوب أكبر من 0' : null;
+    });
+
+    if (_nameError != null || _calError != null) return;
     final state = ctx.read<AppState>();
     final entry = FoodEntry(
       id: const Uuid().v4(), name: name,
       mealType: _selectedMeal, dateTime: DateTime.now(),
-      calories: cal,
+      calories: cal ?? 0,
       protein:  double.tryParse(_proCtrl.text)  ?? 0,
       carbs:    double.tryParse(_carbCtrl.text) ?? 0,
       fat:      double.tryParse(_fatCtrl.text)  ?? 0,
@@ -230,9 +229,9 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
               controller: ctrl,
               padding: const EdgeInsets.all(20),
               child: Column(children: [
-                _Field(ctrl: _nameCtrl, label: 'اسم الطعام', hint: 'مثل: دجاج مشوي', icon: Icons.restaurant_rounded),
+                _Field(ctrl: _nameCtrl, label: 'اسم الطعام *', hint: 'مثل: دجاج مشوي', icon: Icons.restaurant_rounded, errorText: _nameError),
                 const SizedBox(height: 14),
-                _Field(ctrl: _calCtrl, label: 'السعرات الحرارية', hint: '0', numeric: true, icon: Icons.local_fire_department_rounded),
+                _Field(ctrl: _calCtrl, label: 'السعرات الحرارية *', hint: '0', numeric: true, icon: Icons.local_fire_department_rounded, errorText: _calError),
                 const SizedBox(height: 14),
                 Row(children: [
                   Expanded(child: _Field(ctrl: _proCtrl, label: 'بروتين (جم)', hint: '0', numeric: true)),
@@ -262,11 +261,12 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
 }
 
 class _Field extends StatelessWidget {
-  const _Field({required this.ctrl, required this.label, required this.hint, this.numeric = false, this.icon});
+  const _Field({required this.ctrl, required this.label, required this.hint, this.numeric = false, this.icon, this.errorText});
   final TextEditingController ctrl;
   final String label, hint;
   final bool numeric;
   final IconData? icon;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) => TextField(
@@ -276,6 +276,7 @@ class _Field extends StatelessWidget {
     decoration: InputDecoration(
       labelText: label,
       hintText: hint,
+      errorText: errorText,
       prefixIcon: icon != null ? Icon(icon, color: AppColors.textSecondary, size: 20) : null,
     ),
   );

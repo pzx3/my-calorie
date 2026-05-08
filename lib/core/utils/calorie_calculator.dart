@@ -192,15 +192,31 @@ class CalorieCalculator {
     };
   }
 
-  // ──────────────────── Macros ────────────────────
-  /// Balanced macro split (AMDR ranges):
-  ///   Protein 30% (1.2-1.6 g/kg in deficit is evidence-based)
-  ///   Carbs   40% (energy / performance)
-  ///   Fat     30% (hormonal health, minimum 20% recommended)
-  static Map<String, double> macroGoals(int kcal) => {
-    'protein': (kcal * 0.30 / 4).roundToDouble(),   // g
-    'carbs':   (kcal * 0.40 / 4).roundToDouble(),   // g
-    'fat':     (kcal * 0.30 / 9).roundToDouble(),   // g
-  };
+  static Map<String, double> macroGoals({required int kcal, required String goal}) {
+    double proteinRatio, carbsRatio, fatRatio;
+    switch (goal) {
+      case 'lose':
+        proteinRatio = 0.40;
+        carbsRatio = 0.30;
+        fatRatio = 0.30;
+        break;
+      case 'gain':
+        proteinRatio = 0.30;
+        carbsRatio = 0.50;
+        fatRatio = 0.20;
+        break;
+      case 'maintain':
+      default:
+        proteinRatio = 0.30;
+        carbsRatio = 0.40;
+        fatRatio = 0.30;
+        break;
+    }
+    return {
+      'protein': (kcal * proteinRatio / 4).roundToDouble(),
+      'carbs':   (kcal * carbsRatio / 4).roundToDouble(),
+      'fat':     (kcal * fatRatio / 9).roundToDouble(),
+    };
+  }
 }
 

@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/user_profile.dart';
 import '../../../core/utils/calorie_calculator.dart';
+import '../../onboarding/screens/welcome_screen.dart';
 import 'weight_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -185,9 +186,14 @@ class ProfileScreen extends StatelessWidget {
                         style:
                             GoogleFonts.cairo(color: AppColors.textSecondary))),
                 ElevatedButton(
-                  onPressed: () {
-                    state.resetOnboarding();
-                    Navigator.pop(context);
+                  onPressed: () async {
+                    await state.resetOnboarding();
+                    if (!context.mounted) return;
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                      (route) => false,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.coral),

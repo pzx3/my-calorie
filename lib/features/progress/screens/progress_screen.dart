@@ -5,6 +5,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
+import '../../../core/utils/calorie_calculator.dart';
 
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
@@ -44,6 +45,9 @@ class ProgressScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     // Weekly chart
                     _WeeklyChart(state: state, goal: goal),
+                    const SizedBox(height: 16),
+                    // Macro Weekly chart
+                    _MacroWeeklyChart(state: state, goal: goal),
                     const SizedBox(height: 16),
                     // Weekly Log Details
                     _WeeklyLogList(state: state),
@@ -165,9 +169,11 @@ class _MacroProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pGoal = (goal * 0.30 / 4).round();
-    final cGoal = (goal * 0.45 / 4).round();
-    final fGoal = (goal * 0.25 / 9).round();
+    final profileGoal = state.profile?.goal ?? 'maintain';
+    final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
+    final pGoal = macroGoals['protein']!.round();
+    final cGoal = macroGoals['carbs']!.round();
+    final fGoal = macroGoals['fat']!.round();
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.cardBorder, width: 0.5)),
@@ -269,6 +275,103 @@ class _WeeklyChart extends StatelessWidget {
       ]),
     );
   }
+}
+
+class _MacroWeeklyChart extends StatelessWidget {
+  const _MacroWeeklyChart({required this.state, required this.goal});
+  final AppState state;
+  final int goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final dayNames = ['س', 'ح', 'إث', 'ث', 'ر', 'خ', 'ج'];
+    
+    final profileGoal = state.profile?.goal ?? 'maintain';
+    final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
+    final pGoal = macroGoals['protein']!.round();
+    final cGoal = macroGoals['carbs']!.round();
+    final fGoal = macroGoals['fat']!.round();
+    final maxGrams = (pGoal + cGoal + fGoal) * 1.3;
+
+    final bars = List.generate(7, (i) {
+      final daysAgo = 6 - i;
+      final date = now.subtract(Duration(days: daysAgo));
+      final entries = state.entriesForDate(date);
+      final p = entries.fold(0.0, (s, e) => s + e.protein).roundToDouble();
+      final c = entries.fold(0.0, (s, e) => s + e.carbs).roundToDouble();
+      final f = entries.fold(0.0, (s, e) => s + e.fat).roundToDouble();
+      
+      return BarChartGroupData(x: i, barRods: [
+        BarChartRodData(
+          toY: p + c + f,
+          width: 22,
+          borderRadius: BorderRadius.circular(6),
+          color: AppColors.cardBorder, // fallback color if empty
+          rodStackItems: [
+            BarChartRodStackItem(0, p, AppColors.protein),
+            BarChartRodStackItem(p, p + c, AppColors.carbs),
+            BarChartRodStackItem(p + c, p + c + f, AppColors.fat),
+          ]
+        ),
+      ]);
+    });
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.cardBorder, width: 0.5)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text('المغذيات الأسبوعية (ماكرو)', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          _LegendItem(color: AppColors.protein, label: 'بروتين'),
+          const SizedBox(width: 12),
+          _LegendItem(color: AppColors.carbs, label: 'كارب'),
+          const SizedBox(width: 12),
+          _LegendItem(color: AppColors.fat, label: 'دهون'),
+        ]),
+        const SizedBox(height: 20),
+        SizedBox(
+          height: 160,
+          child: BarChart(BarChartData(
+            maxY: maxGrams.toDouble(),
+            barGroups: bars,
+            gridData: FlGridData(
+              show: true, drawVerticalLine: false,
+              getDrawingHorizontalLine: (_) => const FlLine(color: AppColors.cardBorder, strokeWidth: 0.5),
+            ),
+            borderData: FlBorderData(show: false),
+            titlesData: FlTitlesData(
+              bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, _) {
+                final dayIndex = (now.weekday - 1 + v.round()) % 7;
+                return Text(dayNames[dayIndex], style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary));
+              })),
+              leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            ),
+            barTouchData: BarTouchData(touchTooltipData: BarTouchTooltipData(
+              getTooltipItem: (group, _, rod, __) => BarTooltipItem('${rod.toY.round()} جم', GoogleFonts.cairo(color: Colors.white, fontSize: 12)),
+            )),
+          )),
+        ),
+      ]),
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.color, required this.label});
+  final Color color;
+  final String label;
+  @override
+  Widget build(BuildContext context) => Row(children: [
+    Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+    const SizedBox(width: 4),
+    Text(label, style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
+  ]);
 }
 
 class _WeeklyLogList extends StatelessWidget {

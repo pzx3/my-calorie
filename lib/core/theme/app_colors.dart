@@ -7,11 +7,11 @@ class AppColors {
   static const Color card       = Color(0xFF16213E);
   static const Color cardBorder = Color(0xFF2A2A4A);
 
-  static const Color primary      = Color(0xFFFF5722); // Deep Orange (Orange-Red)
-  static const Color primaryLight = Color(0xFFFF8A65);
-  static const Color primaryDark  = Color(0xFFE64A19);
+  static const Color primary      = Color(0xFF3B82F6); // Medium Blue
+  static const Color primaryLight = Color(0xFF60A5FA);
+  static const Color primaryDark  = Color(0xFF2563EB);
 
-  static const Color accent       = Color(0xFFFFAB91);
+  static const Color accent       = Color(0xFF93C5FD);
 
   static const Color teal       = Color(0xFF2DD4BF);
   static const Color coral      = Color(0xFFFF5722);
@@ -31,7 +31,7 @@ class AppColors {
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFFF5722), Color(0xFFFF8A65)],
+    colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

@@ -30,6 +30,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   int _sleepHour = 22;
 
   void _next() {
+    FocusScope.of(context).unfocus(); // Hide keyboard
     final error = _validatePage(_page);
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,6 +131,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           icon: const Icon(Icons.arrow_back_ios_rounded,
                               color: AppColors.textSecondary),
                           onPressed: () {
+                            FocusScope.of(context).unfocus(); // Hide keyboard
                             if (_page > 0) {
                               _pageCtrl.previousPage(
                                   duration: const Duration(milliseconds: 400),
@@ -187,19 +189,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _next,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)),
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                     child: Text(_page == _totalPages - 1 ? 'احسب احتياجي ✨' : 'التالي',
                         style: GoogleFonts.cairo(
-                            fontSize: 17, fontWeight: FontWeight.bold)),
+                            fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),

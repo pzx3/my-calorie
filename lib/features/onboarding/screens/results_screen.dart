@@ -180,7 +180,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 const SizedBox(height: 12),
 
                 // Macro info card (uses custom kcal)
-                _MacroInfoCard(kcal: _customKcal).animate().fadeIn(delay: 900.ms),
+                _MacroInfoCard(kcal: _customKcal, goal: widget.profile.goal).animate().fadeIn(delay: 900.ms),
                 const SizedBox(height: 32),
 
                 SizedBox(
@@ -277,11 +277,12 @@ class _StatCard extends StatelessWidget {
 }
 
 class _MacroInfoCard extends StatelessWidget {
-  const _MacroInfoCard({required this.kcal});
+  const _MacroInfoCard({required this.kcal, required this.goal});
   final int kcal;
+  final String goal;
   @override
   Widget build(BuildContext context) {
-    final goals = CalorieCalculator.macroGoals(kcal);
+    final goals = CalorieCalculator.macroGoals(kcal: kcal, goal: goal);
     final protein = goals['protein']!.round();
     final carbs   = goals['carbs']!.round();
     final fat     = goals['fat']!.round();
@@ -292,12 +293,12 @@ class _MacroInfoCard extends StatelessWidget {
         border: Border.all(color: AppColors.cardBorder, width: 0.5),
       ),
       child: Column(children: [
-        Text('توزيع الماكرو المتوازن (AMDR)', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        Text('توزيع الماكرو المخصص لك', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         const SizedBox(height: 16),
         Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-          _MacroItem(label: 'بروتين (30%)', value: '$proteinجم', color: AppColors.protein),
-          _MacroItem(label: 'كارب (40%)',   value: '$carbsجم',   color: AppColors.carbs),
-          _MacroItem(label: 'دهون (30%)',   value: '$fatجم',     color: AppColors.fat),
+          _MacroItem(label: 'بروتين', value: '$proteinجم', color: AppColors.protein),
+          _MacroItem(label: 'كارب',   value: '$carbsجم',   color: AppColors.carbs),
+          _MacroItem(label: 'دهون',   value: '$fatجم',     color: AppColors.fat),
         ]),
       ]),
     );

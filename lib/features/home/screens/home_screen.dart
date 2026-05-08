@@ -6,8 +6,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/food_entry.dart';
 import '../../../shared/widgets/app_logo.dart';
+import '../widgets/macro_share_preview.dart';
 import '../../food_log/screens/food_log_screen.dart';
 import '../../profile/screens/weight_history_screen.dart';
+import '../../../core/utils/calorie_calculator.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -46,7 +48,7 @@ class HomeScreen extends StatelessWidget {
                             children: [
                               Row(
                                 children: [
-                                  const AppLogo(size: 28, showShadow: false),
+                                  const AppLogo(size: 22, showShadow: false),
                                   const SizedBox(width: 8),
                                   Text('مرحباً، ${profile?.name ?? 'صديقي'} 👋',
                                       style: GoogleFonts.cairo(
@@ -60,15 +62,33 @@ class HomeScreen extends StatelessWidget {
                                       fontSize: 13,
                                       color: AppColors.textSecondary)),
                             ]),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                  color: AppColors.cardBorder, width: 0.5)),
-                          child: const Icon(Icons.notifications_rounded,
-                              color: AppColors.textSecondary, size: 22),
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => MacroSharePreview.show(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                        color: AppColors.cardBorder, width: 0.5)),
+                                child: const Icon(Icons.ios_share_rounded,
+                                    color: AppColors.textSecondary, size: 20),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                      color: AppColors.cardBorder, width: 0.5)),
+                              child: const Icon(Icons.notifications_rounded,
+                                  color: AppColors.textSecondary, size: 20),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -263,9 +283,11 @@ class _MacroRow extends StatelessWidget {
   final int goal;
   @override
   Widget build(BuildContext context) {
-    final pGoal = (goal * 0.30 / 4).round();
-    final cGoal = (goal * 0.45 / 4).round();
-    final fGoal = (goal * 0.25 / 9).round();
+    final profileGoal = state.profile?.goal ?? 'maintain';
+    final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
+    final pGoal = macroGoals['protein']!.round();
+    final cGoal = macroGoals['carbs']!.round();
+    final fGoal = macroGoals['fat']!.round();
     return Row(children: [
       Expanded(
           child: _MacroCard(

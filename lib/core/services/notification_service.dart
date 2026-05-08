@@ -29,7 +29,7 @@ class NotificationService {
       iOS: iosSettings,
     );
 
-    await _plugin.initialize(settings);
+    await _plugin.initialize(settings: settings);
     _initialized = true;
   }
 
@@ -128,14 +128,12 @@ class NotificationService {
     );
 
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduled,
-      details,
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduled,
+      notificationDetails: details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time, // Repeat daily
     );
   }
@@ -143,7 +141,7 @@ class NotificationService {
   /// Cancel all water reminder notifications
   Future<void> cancelWaterReminders() async {
     for (int i = 0; i < 20; i++) {
-      await _plugin.cancel(100 + i);
+      await _plugin.cancel(id: 100 + i);
     }
   }
 
@@ -187,9 +185,9 @@ class NotificationService {
 
   /// Cancel calorie reminders
   Future<void> cancelCalorieReminders() async {
-    await _plugin.cancel(200);
-    await _plugin.cancel(201);
-    await _plugin.cancel(202);
+    await _plugin.cancel(id: 200);
+    await _plugin.cancel(id: 201);
+    await _plugin.cancel(id: 202);
   }
 
   /// Cancel all notifications
