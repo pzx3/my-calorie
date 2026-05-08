@@ -298,7 +298,6 @@ class _CalorieStat extends StatelessWidget {
                 fontSize: 15, fontWeight: FontWeight.bold, color: color)),
       ]);
 }
-}
 
 class _WaterQuickCard extends StatefulWidget {
   const _WaterQuickCard(

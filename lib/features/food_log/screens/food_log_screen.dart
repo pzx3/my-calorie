@@ -98,7 +98,7 @@ class _MealLogSection extends StatelessWidget {
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 12, offset: const Offset(0, 6))],
             border: Border.all(color: Colors.white.withValues(alpha: 0.03), width: 1)),
         child: Column(children: [
-          _SectionHeader(mealType: mealType, totalCal: totalCal, onAdd: () => FoodLogScreen._showAddFoodSheet(context, mealType)),
+          _SectionHeader(mealType: mealType, totalCal: totalCal, onAdd: () => FoodLogScreen.showAddFoodSheet(context, mealType)),
           if (entries.isNotEmpty) ...[
             const Divider(height: 1, color: AppColors.cardBorder),
             ...entries.map((e) => _FoodRow(entry: e, onDelete: () => state.removeFoodEntry(e.id))),
