@@ -76,7 +76,7 @@ class _WaterScreenState extends State<WaterScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Column(children: [
                     _WaterBottle(percent: pct),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     Text('$displayCurrent $currentUnit', style: GoogleFonts.cairo(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.water)),
                     Text('من أصل $displayGoal $unit', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
                     const SizedBox(height: 6),
@@ -350,35 +350,36 @@ class _WaterPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final bottleRect  = RRect.fromRectAndRadius(const Offset(20, 40) & const Size(120, 190), const Radius.circular(24));
+    // Scaled coordinates for Size(130, 200)
+    final bottleRect  = RRect.fromRectAndRadius(const Offset(15, 30) & const Size(100, 160), const Radius.circular(20));
     final bottlePaint = Paint()..color = AppColors.cardBorder..style = PaintingStyle.stroke..strokeWidth = 2.5;
     final bgPaint     = Paint()..color = AppColors.card;
     canvas.drawRRect(bottleRect, bgPaint);
 
     // Neck
-    final neckRect = RRect.fromRectAndRadius(const Offset(50, 10) & const Size(60, 36), const Radius.circular(8));
+    final neckRect = RRect.fromRectAndRadius(const Offset(40, 5) & const Size(50, 30), const Radius.circular(6));
     canvas.drawRRect(neckRect, bgPaint);
     canvas.drawRRect(neckRect, bottlePaint);
 
     // Water fill with wave
     if (fillPercent > 0) {
-      final fillHeight = 190 * fillPercent;
-      final waterTop   = 40 + 190 - fillHeight;
+      final fillHeight = 160 * fillPercent;
+      final waterTop   = 30 + 160 - fillHeight;
       final wavePath   = Path();
-      wavePath.moveTo(20, size.height);
-      wavePath.lineTo(20, waterTop + 10);
-      for (double x = 20; x <= 140; x += 2) {
-        final y = waterTop + sin((x / 20) + wavePhase) * 6;
+      wavePath.moveTo(15, size.height);
+      wavePath.lineTo(15, waterTop + 8);
+      for (double x = 15; x <= 115; x += 2) {
+        final y = waterTop + sin((x / 18) + wavePhase) * 5;
         wavePath.lineTo(x, y);
       }
-      wavePath.lineTo(140, size.height);
+      wavePath.lineTo(115, size.height);
       wavePath.close();
 
       final waterPaint = Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter, end: Alignment.bottomCenter,
           colors: [AppColors.waterLight.withValues(alpha: 0.8), AppColors.water],
-        ).createShader(Rect.fromLTRB(20, waterTop, 140, 240));
+        ).createShader(Rect.fromLTRB(15, waterTop, 115, 200));
 
       canvas.save();
       canvas.clipRRect(bottleRect);
@@ -388,14 +389,14 @@ class _WaterPainter extends CustomPainter {
 
     canvas.drawRRect(bottleRect, bottlePaint);
     // Cap
-    canvas.drawRRect(RRect.fromRectAndRadius(const Offset(55, 4) & const Size(50, 14), const Radius.circular(6)), Paint()..color = AppColors.water);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Offset(45, 0) & const Size(40, 10), const Radius.circular(4)), Paint()..color = AppColors.water);
 
     // Percentage text
     final textPainter = TextPainter(
-      text: TextSpan(text: '${(fillPercent * 100).round()}%', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: fillPercent > 0.5 ? Colors.white : AppColors.water)),
+      text: TextSpan(text: '${(fillPercent * 100).round()}%', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: fillPercent > 0.5 ? Colors.white : AppColors.water)),
       textDirection: TextDirection.ltr,
     )..layout();
-    textPainter.paint(canvas, Offset(80 - textPainter.width / 2, 40 + 95 - textPainter.height / 2));
+    textPainter.paint(canvas, Offset(65 - textPainter.width / 2, 30 + 80 - textPainter.height / 2));
   }
 
   @override
@@ -749,6 +750,27 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
                 ),
               ],
             ])),
+            const SizedBox(height: 16),
+            
+            // ── Test Notification Button ──
+            Center(
+              child: TextButton.icon(
+                onPressed: () async {
+                  await NotificationService().showImmediateTestNotification();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('سيصلك إشعار تجريبي خلال 5 ثوانٍ.. اخرج من التطبيق الآن!', style: GoogleFonts.cairo()),
+                        backgroundColor: AppColors.water,
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.notifications_active_outlined, size: 18, color: AppColors.water),
+                label: Text('إرسال إشعار تجريبي لاختبار النظام', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.water, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,

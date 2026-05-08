@@ -125,8 +125,12 @@ class AppState extends ChangeNotifier {
   Future<void> saveProfile(UserProfile p) async {
     _profile = p;
     await _saveProfile();
-    // Schedule calorie reminders
-    await NotificationService().scheduleCalorieReminders();
+    // Schedule all reminders
+    final notif = NotificationService();
+    await notif.scheduleCalorieReminders();
+    if (p.waterSetupComplete) {
+      await notif.scheduleWaterReminders(p);
+    }
     notifyListeners();
   }
 
@@ -168,6 +172,8 @@ class AppState extends ChangeNotifier {
       lastWeightUpdate: DateTime.now(),
     );
     await _saveProfile();
+    // Sync notifications with new goals
+    await NotificationService().scheduleWaterReminders(_profile!);
     notifyListeners();
   }
 
@@ -175,6 +181,15 @@ class AppState extends ChangeNotifier {
     _foodEntries.add(entry);
     await _saveFood();
     notifyListeners();
+  }
+
+  Future<void> updateFoodEntry(FoodEntry entry) async {
+    final idx = _foodEntries.indexWhere((e) => e.id == entry.id);
+    if (idx != -1) {
+      _foodEntries[idx] = entry;
+      await _saveFood();
+      notifyListeners();
+    }
   }
 
   Future<void> removeFoodEntry(String id) async {
@@ -249,6 +264,7 @@ class AppState extends ChangeNotifier {
         clearPreferredCup: clearPreferredCup,
       );
       await _saveProfile();
+      await NotificationService().scheduleWaterReminders(_profile!);
       notifyListeners();
     }
   }

@@ -267,7 +267,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     ),
                     child: ElevatedButton(
                       onPressed: () async {
-                        await context.read<AppState>().saveProfile(_finalProfile);
+                        // Request notification permission before finishing
+                        await NotificationService().requestPermission();
+                        if (context.mounted) {
+                          await context.read<AppState>().saveProfile(_finalProfile);
+                        }
                         if (context.mounted) {
                           Navigator.pushAndRemoveUntil(
                               context,

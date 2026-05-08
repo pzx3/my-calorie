@@ -25,7 +25,7 @@ class WelcomeScreen extends StatelessWidget {
             child: Column(
               children: [
                 const Spacer(flex: 2),
-                const AppLogo()
+                const AppLogo(size: 140)
                     .animate()
                     .scale(delay: 200.ms, duration: 600.ms, curve: Curves.elasticOut),
                 const SizedBox(height: 20),

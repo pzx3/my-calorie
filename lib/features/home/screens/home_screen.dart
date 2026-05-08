@@ -10,6 +10,7 @@ import '../widgets/macro_share_preview.dart';
 import '../../food_log/screens/food_log_screen.dart';
 import '../../profile/screens/weight_history_screen.dart';
 import '../../../core/utils/calorie_calculator.dart';
+import '../../../shared/widgets/macro_row.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -114,7 +115,18 @@ class HomeScreen extends StatelessWidget {
                         state: state),
                     const SizedBox(height: 16),
                     // ── Macros Row ──
-                    _MacroRow(state: state, goal: goal),
+                    Builder(builder: (context) {
+                      final profileGoal = state.profile?.goal ?? 'maintain';
+                      final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
+                      return MacroRow(
+                        protein: state.proteinToday.round(),
+                        carbs: state.carbsToday.round(),
+                        fat: state.fatToday.round(),
+                        pGoal: macroGoals['protein']!.round(),
+                        cGoal: macroGoals['carbs']!.round(),
+                        fGoal: macroGoals['fat']!.round(),
+                      );
+                    }),
                     const SizedBox(height: 16),
                     // ── Water Quick ──
                     if (state.profile?.waterSetupComplete == true)
@@ -125,7 +137,7 @@ class HomeScreen extends StatelessWidget {
                           state: state)
                     else
                       _WaterSetupPrompt(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     // ── Meals ──
                     ...MealType.all
                         .map((m) => _MealSection(mealType: m, state: state)),
@@ -182,8 +194,9 @@ class _CalorieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reachedGoal = eaten >= goal;
     final overEaten = eaten > goal;
-    final ringColor = overEaten ? AppColors.coral : AppColors.primary;
+    final ringColor = reachedGoal ? AppColors.coral : AppColors.primary;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -201,16 +214,25 @@ class _CalorieCard extends StatelessWidget {
             opacity: anim,
             child: ScaleTransition(scale: Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: anim, curve: Curves.bounceOut)), child: child),
           ),
-          child: eaten >= goal
+          child: eaten > goal
               ? Padding(
-                  key: const ValueKey('cal_done_v2'),
+                  key: const ValueKey('cal_over_v2'),
                   padding: const EdgeInsets.only(bottom: 6),
-                  child: Text('قفلت سعراتك 🔥',
+                  child: Text('تجاوزت هدفك ⚠️',
                       style: GoogleFonts.cairo(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary)))
-              : const SizedBox.shrink(key: ValueKey('cal_not_done_v2')),
+                          color: AppColors.coral)))
+              : eaten >= goal
+                  ? Padding(
+                      key: const ValueKey('cal_done_v2'),
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text('قفلت سعراتك 🔥',
+                          style: GoogleFonts.cairo(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.coral)))
+                  : const SizedBox.shrink(key: ValueKey('cal_not_done_v2')),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -236,7 +258,7 @@ class _CalorieCard extends StatelessWidget {
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
                       color:
-                          overEaten ? AppColors.coral : AppColors.textPrimary)),
+                          reachedGoal ? AppColors.coral : AppColors.textPrimary)),
               Text(overEaten ? 'تجاوزت' : 'متبقي',
                   style: GoogleFonts.cairo(
                       fontSize: 10, color: AppColors.textSecondary)),
@@ -277,88 +299,6 @@ class _CalorieStat extends StatelessWidget {
       ]);
 }
 
-class _MacroRow extends StatelessWidget {
-  const _MacroRow({required this.state, required this.goal});
-  final AppState state;
-  final int goal;
-  @override
-  Widget build(BuildContext context) {
-    final profileGoal = state.profile?.goal ?? 'maintain';
-    final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
-    final pGoal = macroGoals['protein']!.round();
-    final cGoal = macroGoals['carbs']!.round();
-    final fGoal = macroGoals['fat']!.round();
-    return Row(children: [
-      Expanded(
-          child: _MacroCard(
-              label: 'بروتين',
-              current: state.proteinToday.round(),
-              goal: pGoal,
-              color: AppColors.protein,
-              unit: 'جم')),
-      const SizedBox(width: 10),
-      Expanded(
-          child: _MacroCard(
-              label: 'كارب',
-              current: state.carbsToday.round(),
-              goal: cGoal,
-              color: AppColors.carbs,
-              unit: 'جم')),
-      const SizedBox(width: 10),
-      Expanded(
-          child: _MacroCard(
-              label: 'دهون',
-              current: state.fatToday.round(),
-              goal: fGoal,
-              color: AppColors.fat,
-              unit: 'جم')),
-    ]);
-  }
-}
-
-class _MacroCard extends StatelessWidget {
-  const _MacroCard(
-      {required this.label,
-      required this.current,
-      required this.goal,
-      required this.color,
-      required this.unit});
-  final String label, unit;
-  final int current, goal;
-  final Color color;
-  @override
-  Widget build(BuildContext context) {
-    final pct = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))],
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1)),
-      child: Column(children: [
-        Text('$current$unit',
-            style: GoogleFonts.cairo(
-                fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-        const SizedBox(height: 4),
-        Text(label,
-            style: GoogleFonts.cairo(
-                fontSize: 11, color: AppColors.textSecondary)),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-              value: pct,
-              backgroundColor: AppColors.cardBorder,
-              valueColor: AlwaysStoppedAnimation(color),
-              minHeight: 5),
-        ),
-        const SizedBox(height: 4),
-        Text('/$goal$unit',
-            style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textHint)),
-      ]),
-    );
-  }
 }
 
 class _WaterQuickCard extends StatefulWidget {
@@ -547,7 +487,18 @@ class _MealSection extends StatelessWidget {
           if (entries.isNotEmpty) ...[
             const Divider(height: 1, color: AppColors.cardBorder),
             ...entries.map((e) => _FoodTile(entry: e, state: state)),
-          ],
+          ] else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Opacity(
+                opacity: 0.5,
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.add_circle_outline_rounded, size: 14, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Text('سجل وجبة ${MealType.label(mealType)}', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
+                ]),
+              ),
+            ),
         ]),
       ),
     );
@@ -578,6 +529,7 @@ class _FoodTile extends StatelessWidget {
               style: GoogleFonts.cairo(
                   fontSize: 10, color: AppColors.textSecondary)),
         ]),
+        onTap: () => FoodLogScreen._showAddFoodSheet(context, entry.mealType, existingEntry: entry),
         onLongPress: () => _confirmDelete(context),
       );
   void _confirmDelete(BuildContext context) {

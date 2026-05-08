@@ -6,6 +6,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/food_entry.dart';
 import '../../../core/services/share_service.dart';
+import '../../../core/utils/calorie_calculator.dart';
+import '../../../shared/widgets/macro_row.dart';
+import '../../home/widgets/macro_share_preview.dart';
 
 class FoodLogScreen extends StatelessWidget {
   const FoodLogScreen({super.key, this.initialMeal});
@@ -16,32 +19,63 @@ class FoodLogScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('سجل الطعام', style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        title: Text('سجل الطعام', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         centerTitle: true,
         backgroundColor: AppColors.background,
+        actions: [
+          IconButton(
+            onPressed: () => MacroSharePreview.show(context),
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.cardBorder, width: 0.5),
+              ),
+              child: const Icon(Icons.ios_share_rounded, color: AppColors.textSecondary, size: 18),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Consumer<AppState>(
-        builder: (context, state, _) => ListView(
-          padding: const EdgeInsets.all(16),
-          children: MealType.all.map((m) => _MealLogSection(mealType: m, state: state)).toList(),
-        ),
+        builder: (context, state, _) {
+          final goal = state.profile?.tdeeKcal ?? 2000;
+          final profileGoal = state.profile?.goal ?? 'maintain';
+          final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              MacroRow(
+                protein: state.proteinToday.round(),
+                carbs: state.carbsToday.round(),
+                fat: state.fatToday.round(),
+                pGoal: macroGoals['protein']!.round(),
+                cGoal: macroGoals['carbs']!.round(),
+                fGoal: macroGoals['fat']!.round(),
+              ),
+              const SizedBox(height: 14),
+              ...MealType.all.map((m) => _MealLogSection(mealType: m, state: state)),
+            ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'food_fab',
         onPressed: () => _showAddFoodSheet(context, initialMeal ?? MealType.breakfast),
         backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: Text('أضف طعام', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold)),
+        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+        label: Text('أضف طعام', style: GoogleFonts.cairo(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  static void _showAddFoodSheet(BuildContext context, String initialMeal) {
+  static void _showAddFoodSheet(BuildContext context, String initialMeal, {FoodEntry? existingEntry}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _AddFoodSheet(initialMeal: initialMeal),
+      builder: (_) => _AddFoodSheet(initialMeal: initialMeal, existingEntry: existingEntry),
     );
   }
 }
@@ -109,6 +143,19 @@ class _FoodRow extends StatelessWidget {
   final FoodEntry entry;
   final VoidCallback onDelete;
 
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('حذف الطعام؟', style: GoogleFonts.cairo()),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+          TextButton(onPressed: () { onDelete(); Navigator.pop(ctx); }, child: const Text('حذف', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => Dismissible(
     key: Key(entry.id),
@@ -122,6 +169,8 @@ class _FoodRow extends StatelessWidget {
     onDismissed: (_) => onDelete(),
     child: ListTile(
       dense: true,
+      onTap: () => FoodLogScreen._showAddFoodSheet(context, entry.mealType, existingEntry: entry),
+      onLongPress: () => _confirmDelete(context),
       title: Text(entry.name, style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textPrimary)),
       subtitle: Text('ب:${entry.protein.round()}  ك:${entry.carbs.round()}  د:${entry.fat.round()} جم',
           style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
@@ -143,8 +192,9 @@ class _FoodRow extends StatelessWidget {
 
 // ──────────────────── Add Food Bottom Sheet (Manual Only) ────────────────────
 class _AddFoodSheet extends StatefulWidget {
-  const _AddFoodSheet({required this.initialMeal});
+  const _AddFoodSheet({required this.initialMeal, this.existingEntry});
   final String initialMeal;
+  final FoodEntry? existingEntry;
   @override State<_AddFoodSheet> createState() => _AddFoodSheetState();
 }
 
@@ -157,7 +207,17 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
   final _fatCtrl  = TextEditingController();
 
   @override
-  void initState() { super.initState(); _selectedMeal = widget.initialMeal; }
+  void initState() {
+    super.initState();
+    _selectedMeal = widget.existingEntry?.mealType ?? widget.initialMeal;
+    if (widget.existingEntry != null) {
+      _nameCtrl.text = widget.existingEntry!.name;
+      _calCtrl.text = widget.existingEntry!.calories.round().toString();
+      _proCtrl.text = widget.existingEntry!.protein.round().toString();
+      _carbCtrl.text = widget.existingEntry!.carbs.round().toString();
+      _fatCtrl.text = widget.existingEntry!.fat.round().toString();
+    }
+  }
 
   String? _nameError;
   String? _calError;
@@ -173,15 +233,23 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
 
     if (_nameError != null || _calError != null) return;
     final state = ctx.read<AppState>();
+    
     final entry = FoodEntry(
-      id: const Uuid().v4(), name: name,
-      mealType: _selectedMeal, dateTime: DateTime.now(),
+      id: widget.existingEntry?.id ?? const Uuid().v4(),
+      name: name,
+      mealType: _selectedMeal,
+      dateTime: widget.existingEntry?.dateTime ?? DateTime.now(),
       calories: cal ?? 0,
       protein:  double.tryParse(_proCtrl.text)  ?? 0,
       carbs:    double.tryParse(_carbCtrl.text) ?? 0,
       fat:      double.tryParse(_fatCtrl.text)  ?? 0,
     );
-    state.addFoodEntry(entry);
+
+    if (widget.existingEntry != null) {
+      state.updateFoodEntry(entry);
+    } else {
+      state.addFoodEntry(entry);
+    }
     Navigator.pop(ctx);
   }
 
@@ -197,7 +265,8 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text('إضافة طعام', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            child: Text(widget.existingEntry != null ? 'تعديل الطعام' : 'إضافة طعام',
+                style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           ),
           // Meal selector
           Padding(
@@ -250,7 +319,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
               child: ElevatedButton(
                 onPressed: () => _add(context),
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                child: Text('إضافة للسجل', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text(widget.existingEntry != null ? 'حفظ التعديلات' : 'إضافة إلى اليوم', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
               ),
             ),
           ),
@@ -281,3 +350,4 @@ class _Field extends StatelessWidget {
     ),
   );
 }
+

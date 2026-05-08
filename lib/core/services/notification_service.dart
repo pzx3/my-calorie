@@ -190,6 +190,36 @@ class NotificationService {
     await _plugin.cancel(id: 202);
   }
 
+  /// Send a test notification after 5 seconds to verify background behavior
+  Future<void> showImmediateTestNotification() async {
+    final scheduled = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
+
+    const androidDetails = AndroidNotificationDetails(
+      'test_channel',
+      'إشعارات الاختبار',
+      channelDescription: 'قناة لاختبار وصول التنبيهات',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    await _plugin.zonedSchedule(
+      999,
+      '🔔 تجربة الإشعارات',
+      'رائع! نظام التنبيهات يعمل بنجاح حتى والتطبيق مغلق.',
+      scheduled,
+      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
   /// Cancel all notifications
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
