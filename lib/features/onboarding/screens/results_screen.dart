@@ -8,6 +8,7 @@ import '../../../core/models/user_profile.dart';
 import '../../../core/models/weight_entry.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/utils/calorie_calculator.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../shared/navigation/main_navigation.dart';
 
 class ResultsScreen extends StatefulWidget {

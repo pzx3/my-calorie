@@ -298,7 +298,6 @@ class _CalorieStat extends StatelessWidget {
                 fontSize: 15, fontWeight: FontWeight.bold, color: color)),
       ]);
 }
-
 }
 
 class _WaterQuickCard extends StatefulWidget {
@@ -529,7 +528,7 @@ class _FoodTile extends StatelessWidget {
               style: GoogleFonts.cairo(
                   fontSize: 10, color: AppColors.textSecondary)),
         ]),
-        onTap: () => FoodLogScreen._showAddFoodSheet(context, entry.mealType, existingEntry: entry),
+        onTap: () => FoodLogScreen.showAddFoodSheet(context, entry.mealType, existingEntry: entry),
         onLongPress: () => _confirmDelete(context),
       );
   void _confirmDelete(BuildContext context) {

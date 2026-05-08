@@ -210,13 +210,12 @@ class NotificationService {
     );
 
     await _plugin.zonedSchedule(
-      999,
-      '🔔 تجربة الإشعارات',
-      'رائع! نظام التنبيهات يعمل بنجاح حتى والتطبيق مغلق.',
-      scheduled,
-      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+      id: 999,
+      title: '🔔 تجربة الإشعارات',
+      body: 'رائع! نظام التنبيهات يعمل بنجاح حتى والتطبيق مغلق.',
+      scheduledDate: scheduled,
+      notificationDetails: const NotificationDetails(android: androidDetails, iOS: iosDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 

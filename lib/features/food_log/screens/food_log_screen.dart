@@ -62,7 +62,7 @@ class FoodLogScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'food_fab',
-        onPressed: () => _showAddFoodSheet(context, initialMeal ?? MealType.breakfast),
+        onPressed: () => showAddFoodSheet(context, initialMeal ?? MealType.breakfast),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
         label: Text('أضف طعام', style: GoogleFonts.cairo(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold)),
@@ -70,7 +70,7 @@ class FoodLogScreen extends StatelessWidget {
     );
   }
 
-  static void _showAddFoodSheet(BuildContext context, String initialMeal, {FoodEntry? existingEntry}) {
+  static void showAddFoodSheet(BuildContext context, String initialMeal, {FoodEntry? existingEntry}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -169,7 +169,7 @@ class _FoodRow extends StatelessWidget {
     onDismissed: (_) => onDelete(),
     child: ListTile(
       dense: true,
-      onTap: () => FoodLogScreen._showAddFoodSheet(context, entry.mealType, existingEntry: entry),
+      onTap: () => FoodLogScreen.showAddFoodSheet(context, entry.mealType, existingEntry: entry),
       onLongPress: () => _confirmDelete(context),
       title: Text(entry.name, style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textPrimary)),
       subtitle: Text('ب:${entry.protein.round()}  ك:${entry.carbs.round()}  د:${entry.fat.round()} جم',
