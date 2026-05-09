@@ -27,10 +27,6 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
 
   // حقول قابلة للتعديل
   final _nameCtrl = TextEditingController(text: 'منتج غذائي');
-  final _calCtrl = TextEditingController();
-  final _proCtrl = TextEditingController();
-  final _carbCtrl = TextEditingController();
-  final _fatCtrl = TextEditingController();
   final _gramsCtrl = TextEditingController(text: '100');
 
   double _grams = 100.0;
@@ -57,10 +53,6 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _calCtrl.dispose();
-    _proCtrl.dispose();
-    _carbCtrl.dispose();
-    _fatCtrl.dispose();
     _gramsCtrl.dispose();
     super.dispose();
   }
@@ -131,10 +123,6 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
           _grams = 100.0;
         }
         _gramsCtrl.text = _grams.round().toString();
-        _calCtrl.text = label.caloriesPer100g.round().toString();
-        _proCtrl.text = label.proteinPer100g.toStringAsFixed(1);
-        _carbCtrl.text = label.carbsPer100g.toStringAsFixed(1);
-        _fatCtrl.text = label.fatPer100g.toStringAsFixed(1);
       });
     } catch (e) {
       if (mounted) setState(() { _isScanning = false; _error = 'حصل خطأ أثناء المسح.'; });
@@ -142,16 +130,13 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   }
 
   Map<String, double> get _actualValues {
-    final cal = double.tryParse(_calCtrl.text) ?? 0;
-    final pro = double.tryParse(_proCtrl.text) ?? 0;
-    final carb = double.tryParse(_carbCtrl.text) ?? 0;
-    final fat = double.tryParse(_fatCtrl.text) ?? 0;
+    if (_label == null) return {'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0};
     final factor = _grams / 100.0;
     return {
-      'calories': cal * factor,
-      'protein': pro * factor,
-      'carbs': carb * factor,
-      'fat': fat * factor,
+      'calories': _label!.caloriesPer100g * factor,
+      'protein': _label!.proteinPer100g * factor,
+      'carbs': _label!.carbsPer100g * factor,
+      'fat': _label!.fatPer100g * factor,
     };
   }
 
@@ -274,7 +259,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
         ),
         const SizedBox(height: 20),
 
-        // ── بطاقة الكمية (تحويل السلايدر لمدخل يدوي) ──
+        // ── بطاقة الكمية ──
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -317,25 +302,22 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
         ),
         const SizedBox(height: 20),
 
-        // ── بطاقة القيم الغذائية لكل 100 جم ──
+        // ── بطاقة عرض القيم الملتقطة (للعلم فقط) ──
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.cardBorder)),
           child: Column(children: [
             Row(children: [
-              const Icon(Icons.edit_rounded, color: AppColors.primary, size: 20),
+              const Icon(Icons.visibility_rounded, color: AppColors.textSecondary, size: 20),
               const SizedBox(width: 8),
-              Text('القيم لكل 100 جم (قابلة للتعديل)', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold)),
+              Text('القيم الغذائية المكتشفة (لكل 100 جم)', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
             ]),
             const SizedBox(height: 20),
-            Row(children: [
-              Expanded(child: _EditableField(ctrl: _calCtrl, label: 'سعرات', color: AppColors.primary, onChanged: () => setState(() {}))),
-              const SizedBox(width: 12),
-              Expanded(child: _EditableField(ctrl: _proCtrl, label: 'بروتين', color: AppColors.protein, onChanged: () => setState(() {}))),
-              const SizedBox(width: 12),
-              Expanded(child: _EditableField(ctrl: _carbCtrl, label: 'كارب', color: AppColors.carbs, onChanged: () => setState(() {}))),
-              const SizedBox(width: 12),
-              Expanded(child: _EditableField(ctrl: _fatCtrl, label: 'دهون', color: AppColors.fat, onChanged: () => setState(() {}))),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+              _CapturedValue(label: 'سعرات', value: _label!.caloriesPer100g.round().toString(), color: AppColors.primary),
+              _CapturedValue(label: 'بروتين', value: _label!.proteinPer100g.toStringAsFixed(1), color: AppColors.protein),
+              _CapturedValue(label: 'كارب', value: _label!.carbsPer100g.toStringAsFixed(1), color: AppColors.carbs),
+              _CapturedValue(label: 'دهون', value: _label!.fatPer100g.toStringAsFixed(1), color: AppColors.fat),
             ]),
           ]),
         ),
@@ -414,29 +396,15 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   }
 }
 
-class _EditableField extends StatelessWidget {
-  const _EditableField({required this.ctrl, required this.label, required this.color, required this.onChanged});
-  final TextEditingController ctrl;
-  final String label;
+class _CapturedValue extends StatelessWidget {
+  const _CapturedValue({required this.label, required this.value, required this.color});
+  final String label, value;
   final Color color;
-  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      TextField(
-        controller: ctrl,
-        onChanged: (_) => onChanged(),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        textAlign: TextAlign.center,
-        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: color),
-        decoration: InputDecoration(
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color.withValues(alpha: 0.2))),
-        ),
-      ),
-      const SizedBox(height: 4),
+      Text(value, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
       Text(label, style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary)),
     ]);
   }
