@@ -109,42 +109,40 @@ class _WaterScreenState extends State<WaterScreen> {
                             )
                           : const SizedBox.shrink(key: ValueKey('water_not_done_screen_v2')),
                     ),
-                    const SizedBox(height: 20),
                     _UnitToggle(isOz: _isOz, onToggle: () => setState(() => _isOz = !_isOz)),
                     const SizedBox(height: 20),
 
+                    // Quick Add is ALWAYS visible if goal is not met
+                    if (pct < 1.0) ...[
+                      Text('إضافة سريعة', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                      const SizedBox(height: 10),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          for (final amt in quickAmounts)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 5),
+                              child: _QuickWaterBtn(
+                                amount: amt,
+                                unit: currentUnit,
+                                onTap: () => state.addWater(_isOz ? _ozToMl(amt) : amt),
+                              ),
+                            ),
+                        ]),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // Show Setup Card only if not complete, but below tracking
                     if (state.profile?.waterSetupComplete != true)
                       _SetupWaterCard(
                         onTap: () => _showWaterSettings(context, state),
                         recommendedMl: state.profile != null ? (state.profile!.weightKg * 33).round() : 2000,
                         isOz: _isOz,
                       )
-                    else ...[
-                      if (pct < 1.0) ...[
-                        Text('إضافة سريعة', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
-                        const SizedBox(height: 10),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                            for (final amt in quickAmounts)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 5),
-                                child: _QuickWaterBtn(
-                                  amount: amt,
-                                  unit: currentUnit,
-                                  onTap: () => state.addWater(_isOz ? _ozToMl(amt) : amt),
-                                ),
-                              ),
-                          ]),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-
-                      // ── Water Schedule ──
-                      if (state.profile != null) ...[
-                        _WaterScheduleCard(profile: state.profile!, consumedCount: state.todayWater.length, isOz: _isOz),
-                        const SizedBox(height: 20),
-                      ],
+                    else if (state.profile != null) ...[
+                      _WaterScheduleCard(profile: state.profile!, consumedCount: state.todayWater.length, isOz: _isOz),
+                      const SizedBox(height: 20),
                     ],
 
                     // History
