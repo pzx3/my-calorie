@@ -129,10 +129,20 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
       setState(() {
         _isScanning = false;
         _label = label;
-        _calCtrl.text = label.caloriesPer100g.round().toString();
-        _proCtrl.text = label.proteinPer100g.toStringAsFixed(1);
-        _carbCtrl.text = label.carbsPer100g.toStringAsFixed(1);
-        _fatCtrl.text = label.fatPer100g.toStringAsFixed(1);
+        
+        // إذا تم اكتشاف حجم حصة (مثلاً 45 جرام)، نستخدمه كقيمة افتراضية بدلاً من 100 جرام
+        if (label.servingSizeG != null && label.servingSizeG! > 0) {
+          _grams = label.servingSizeG!;
+        } else {
+          _grams = 100.0;
+        }
+
+        // حساب القيم بناءً على الجرامات المحددة
+        final factor = _grams / 100.0;
+        _calCtrl.text = (label.caloriesPer100g * factor).round().toString();
+        _proCtrl.text = (label.proteinPer100g * factor).toStringAsFixed(1);
+        _carbCtrl.text = (label.carbsPer100g * factor).toStringAsFixed(1);
+        _fatCtrl.text = (label.fatPer100g * factor).toStringAsFixed(1);
       });
     } catch (e) {
       if (mounted) {

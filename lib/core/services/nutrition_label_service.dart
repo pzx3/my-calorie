@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:huawei_scan/hms_scan_library.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
-/// نموذج بيانات القيمة الغذائية المستخرجة (لكل 100 جم)
+/// نموذج بيانات القيمة الغذائية المستخرجة (لكل 100 جم داخلياً)
 class NutritionLabel {
   final String? productName;
   final double caloriesPer100g;
@@ -12,7 +13,7 @@ class NutritionLabel {
   final double? fiberPer100g;
   final double? sugarPer100g;
   final double? sodiumPer100g;
-  final double? servingSizeG;
+  final double? servingSizeG; // حجم الحصة المكتشف بالجرام
   final String rawText;
 
   const NutritionLabel({
@@ -28,40 +29,44 @@ class NutritionLabel {
     required this.rawText,
   });
 
-  /// حساب القيم الفعلية بناءً على الكمية بالجرام
-  Map<String, double> calculateForGrams(double grams) {
-    final factor = grams / 100.0;
-    return {
-      'calories': caloriesPer100g * factor,
-      'protein': proteinPer100g * factor,
-      'carbs': carbsPer100g * factor,
-      'fat': fatPer100g * factor,
-    };
-  }
-
   bool get isValid => caloriesPer100g > 0 || proteinPer100g > 0 || carbsPer100g > 0 || fatPer100g > 0;
 }
 
 /// خدمة مسح وتحليل ملصقات القيمة الغذائية
 class NutritionLabelService {
-  // ملاحظة: ML Kit يدعم حالياً اللاتينية والصينية والديفاناغاري واليابانية والكورية برمجياً
-  // نستخدم المحرك اللاتيني ونعتمد على قوة معالجة النصوص (Logic) لاستخراج البيانات من الملصقات المزدوجة
-  static final _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  // نحتفظ بـ ML Kit كاحتياطي (Fallback)
+  static final _mlKit = TextRecognizer(script: TextRecognitionScript.latin);
 
   /// مسح صورة واستخراج بيانات القيمة الغذائية
   static Future<NutritionLabel?> scanImage(File imageFile) async {
     try {
-      final inputImage = InputImage.fromFile(imageFile);
-      final recognized = await _textRecognizer.processImage(inputImage);
-      final rawText = recognized.text;
+      String rawText = '';
+      
+      // 1. محاولة استخدام Huawei Scan Kit (الأقوى للغة العربية)
+      try {
+        final request = HmsTextAnalyzerRequest(path: imageFile.path);
+        final result = await HmsTextAnalyzer.analyzeText(request);
+        if (result.text != null && result.text!.isNotEmpty) {
+          rawText = result.text!;
+          debugPrint('═══ Huawei OCR Raw Text ═══\n$rawText\n═══════════════════');
+        }
+      } catch (e) {
+        debugPrint('Huawei OCR Error: $e');
+      }
 
-      debugPrint('═══ OCR Raw Text ═══\n$rawText\n═══════════════════');
+      // 2. استخدام ML Kit كاحتياطي إذا فشل Huawei أو لم يجد نصاً
+      if (rawText.isEmpty) {
+        final inputImage = InputImage.fromFile(imageFile);
+        final recognized = await _mlKit.processImage(inputImage);
+        rawText = recognized.text;
+        debugPrint('═══ ML Kit Fallback Raw Text ═══\n$rawText\n═══════════════════');
+      }
 
       if (rawText.trim().isEmpty) return null;
 
       return _parseNutritionText(rawText);
     } catch (e) {
-      debugPrint('OCR Error: $e');
+      debugPrint('General OCR Error: $e');
       return null;
     }
   }
@@ -71,8 +76,7 @@ class NutritionLabelService {
     // 1. تنظيف النص وتحويله لحروف صغيرة
     String cleanText = text.toLowerCase();
 
-    // 2. معالجة الأخطاء الشائعة في الـ OCR (مثل حرف O بدلاً من الصفر 0)
-    // نقوم باستبدالها فقط إذا كانت محاطة بأرقام أو نقاط
+    // 2. معالجة أخطاء OCR الشائعة (O -> 0)
     cleanText = cleanText.replaceAllMapped(RegExp(r'(\d)[oO](\d)'), (m) => '${m[1]}0${m[2]}');
     cleanText = cleanText.replaceAllMapped(RegExp(r'(\d)[oO]'), (m) => '${m[1]}0');
     cleanText = cleanText.replaceAllMapped(RegExp(r'[oO](\d)'), (m) => '0${m[1]}');
@@ -89,44 +93,34 @@ class NutritionLabelService {
       cleanText = cleanText.replaceAll(key, value);
     });
 
-    // 5. استخراج القيم (استراتيجية الخبير: البحث عن الكلمة المفتاحية ثم أقرب رقم بعدها)
-    final calories = _expertExtract(cleanText, [
-      'calories', 'energy', 'سعرات', 'طاقة', 'الطاقة', 'سعر حراري', 'كالوري', 'kcal'
-    ]);
+    // 5. استخراج حجم الحصة (Serving Size) - ضروري جداً للحسابات الصحيحة
+    final servingSize = _expertExtract(cleanText, [
+      'serving size', 'حجم الحصة', 'الحصة', 'per serving', 'size', '1 pack', '1 unit', '1 bar', 'لوح'
+    ], isServing: true);
 
-    final protein = _expertExtract(cleanText, [
-      'protein', 'بروتين', 'بروتينات', 'prote'
-    ]);
-
-    final carbs = _expertExtract(cleanText, [
-      'carbohydrate', 'كربوهيدرات', 'كارب', 'نشويات', 'carb', 'سكريات كلي'
-    ]);
-
-    final fat = _expertExtract(cleanText, [
-      'fat', 'دهون', 'الدسم', 'مجموع الدهون', 'دسم', 'lipid'
-    ]);
-
-    final fiber = _expertExtract(cleanText, ['fiber', 'fibre', 'ألياف', 'الياف']);
+    // 6. استخراج القيم الأساسية
+    final calories = _expertExtract(cleanText, ['calories', 'energy', 'سعرات', 'طاقة', 'سعر حراري', 'كالوري', 'kcal']);
+    final protein = _expertExtract(cleanText, ['protein', 'بروتين', 'بروتينات', 'prote']);
+    final carbs = _expertExtract(cleanText, ['carbohydrate', 'كربوهيدرات', 'كارب', 'نشويات', 'carb']);
+    final fat = _expertExtract(cleanText, ['fat', 'دهون', 'الدسم', 'مجموع الدهون', 'دسم', 'lipid']);
+    
+    final fiber = _expertExtract(cleanText, ['fiber', 'fibre', 'ألياف']);
     final sugar = _expertExtract(cleanText, ['sugar', 'سكر', 'سكريات']);
     final sodium = _expertExtract(cleanText, ['sodium', 'صوديوم', 'ملح', 'صوديم']);
 
-    // حجم الحصة
-    final servingSize = _expertExtract(cleanText, [
-      'serving size', 'حجم الحصة', 'الحصة', 'per serving', 'size'
-    ], isServing: true);
-
-    // اكتشاف إذا كانت القيم لكل حصة وليس لكل 100 جم
+    // 7. منطق الحساب المتقدم (Normalization)
     double factor = 1.0;
-    if (servingSize != null && servingSize > 0 && servingSize != 100) {
-      final hasPerServing = RegExp(r'per\s*serving|لكل حصة|per\s*portion|amount\s*per', caseSensitive: false).hasMatch(cleanText);
+    if (servingSize != null && servingSize > 0) {
+      // نبحث عن مؤشرات أن القيم هي لكل حصة
+      final hasPerServing = RegExp(r'per\s*serving|لكل حصة|per\s*portion|amount\s*per|حصة', caseSensitive: false).hasMatch(cleanText);
       final hasPer100 = RegExp(r'per\s*100|لكل 100', caseSensitive: false).hasMatch(cleanText);
 
+      // إذا كانت القيم لكل حصة، نحولها لـ 100 جم للتخزين الموحد
       if (hasPerServing && !hasPer100) {
         factor = 100.0 / servingSize;
       }
     }
 
-    // إذا لم يجد شيئاً إطلاقاً
     if (calories == null && protein == null && carbs == null && fat == null) {
       return null;
     }
@@ -144,35 +138,29 @@ class NutritionLabelService {
     );
   }
 
-  /// استراتيجية الخبير لاستخراج القيمة:
-  /// تبحث عن الكلمة المفتاحية، ثم تبحث عن أول رقم يظهر بعدها في نطاق معين
   static double? _expertExtract(String text, List<String> keywords, {bool isServing = false}) {
     for (final keyword in keywords) {
       final index = text.indexOf(keyword.toLowerCase());
       if (index == -1) continue;
 
-      // نبحث في الـ 40 حرفاً التالية للكلمة المفتاحية
       final searchArea = text.substring(index + keyword.length, 
-          (index + keyword.length + 40).clamp(0, text.length));
+          (index + keyword.length + 50).clamp(0, text.length));
       
-      // تعبير نمطي للبحث عن رقم (يدعم الفواصل العشرية)
-      // إذا كنا نبحث عن حجم حصة، نهتم بالأرقام المتبوعة بـ g أو ml
       if (isServing) {
+        // نبحث عن وزن الجرامات داخل الأقواس أو بعدها مباشرة
         final servingMatch = RegExp(r'(\d+\.?\d*)\s*(?:g|جم|مل|ml|غ|غرام)').firstMatch(searchArea);
         if (servingMatch != null) return double.tryParse(servingMatch.group(1)!);
       }
 
       final numMatch = RegExp(r'(\d+\.?\d*)').firstMatch(searchArea);
       if (numMatch != null) {
-        final val = double.tryParse(numMatch.group(1)!);
-        // نتجاهل الأرقام الصغيرة جداً (مثل 0.1) في السعرات إذا وجدنا رقماً أكبر
-        if (val != null) return val;
+        return double.tryParse(numMatch.group(1)!);
       }
     }
     return null;
   }
 
   static void dispose() {
-    _textRecognizer.close();
+    _mlKit.close();
   }
 }
