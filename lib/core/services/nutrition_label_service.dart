@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:huawei_scan/hms_scan_library.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 /// نموذج بيانات القيمة الغذائية المستخرجة (لكل 100 جم داخلياً)
 class NutritionLabel {
@@ -34,39 +33,25 @@ class NutritionLabel {
 
 /// خدمة مسح وتحليل ملصقات القيمة الغذائية
 class NutritionLabelService {
-  // نحتفظ بـ ML Kit كاحتياطي (Fallback)
-  static final _mlKit = TextRecognizer(script: TextRecognitionScript.latin);
 
   /// مسح صورة واستخراج بيانات القيمة الغذائية
   static Future<NutritionLabel?> scanImage(File imageFile) async {
     try {
       String rawText = '';
       
-      // 1. محاولة استخدام Huawei Scan Kit (الأقوى للغة العربية)
-      try {
-        final request = HmsTextAnalyzerRequest(path: imageFile.path);
-        final result = await HmsTextAnalyzer.analyzeText(request);
-        if (result.text != null && result.text!.isNotEmpty) {
-          rawText = result.text!;
-          debugPrint('═══ Huawei OCR Raw Text ═══\n$rawText\n═══════════════════');
-        }
-      } catch (e) {
-        debugPrint('Huawei OCR Error: $e');
-      }
-
-      // 2. استخدام ML Kit كاحتياطي إذا فشل Huawei أو لم يجد نصاً
-      if (rawText.isEmpty) {
-        final inputImage = InputImage.fromFile(imageFile);
-        final recognized = await _mlKit.processImage(inputImage);
-        rawText = recognized.text;
-        debugPrint('═══ ML Kit Fallback Raw Text ═══\n$rawText\n═══════════════════');
+      final request = HmsTextAnalyzerRequest(path: imageFile.path);
+      final result = await HmsTextAnalyzer.analyzeText(request);
+      
+      if (result.text != null && result.text!.isNotEmpty) {
+        rawText = result.text!;
+        debugPrint('═══ Huawei OCR Raw Text ═══\n$rawText\n═══════════════════');
       }
 
       if (rawText.trim().isEmpty) return null;
 
       return _parseNutritionText(rawText);
     } catch (e) {
-      debugPrint('General OCR Error: $e');
+      debugPrint('OCR Error: $e');
       return null;
     }
   }
@@ -160,7 +145,5 @@ class NutritionLabelService {
     return null;
   }
 
-  static void dispose() {
-    _mlKit.close();
-  }
+  static void dispose() {}
 }
