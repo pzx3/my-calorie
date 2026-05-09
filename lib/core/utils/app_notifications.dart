@@ -12,22 +12,19 @@ class AppNotifications {
       builder: (context) => _TopNotificationWidget(
         message: message,
         isError: isError,
-        onDismiss: () => entry.remove(),
+        onDismiss: () {
+          if (entry.mounted) {
+            entry.remove();
+          }
+        },
       ),
     );
 
     overlay.insert(entry);
-
-    // Auto-dismiss after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (entry.mounted) {
-        entry.remove();
-      }
-    });
   }
 }
 
-class _TopNotificationWidget extends StatelessWidget {
+class _TopNotificationWidget extends StatefulWidget {
   const _TopNotificationWidget({
     required this.message,
     required this.isError,
@@ -39,6 +36,31 @@ class _TopNotificationWidget extends StatelessWidget {
   final VoidCallback onDismiss;
 
   @override
+  State<_TopNotificationWidget> createState() => _TopNotificationWidgetState();
+}
+
+class _TopNotificationWidgetState extends State<_TopNotificationWidget> with SingleTickerProviderStateMixin {
+  bool _isDismissing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-dismiss after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) _handleDismiss();
+    });
+  }
+
+  void _handleDismiss() {
+    if (_isDismissing) return;
+    setState(() => _isDismissing = true);
+    // Wait for the exit animation to finish before removing from overlay
+    Future.delayed(const Duration(milliseconds: 400), () {
+      widget.onDismiss();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Positioned(
       top: MediaQuery.of(context).padding.top + 10,
@@ -47,11 +69,11 @@ class _TopNotificationWidget extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: GestureDetector(
-          onTap: onDismiss,
+          onTap: _handleDismiss,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isError ? AppColors.coral : AppColors.teal,
+              color: widget.isError ? AppColors.coral : AppColors.teal,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -64,14 +86,14 @@ class _TopNotificationWidget extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+                  widget.isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
                   color: Colors.white,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    message,
+                    widget.message,
                     style: GoogleFonts.cairo(
                       color: Colors.white,
                       fontSize: 14,
@@ -81,7 +103,10 @@ class _TopNotificationWidget extends StatelessWidget {
                 ),
               ],
             ),
-          ).animate().slideY(begin: -1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic).fadeIn(),
+          )
+          .animate(target: _isDismissing ? 0 : 1)
+          .slideY(begin: -1.5, end: 0, duration: 400.ms, curve: Curves.easeOutCubic)
+          .fadeIn(duration: 400.ms),
         ),
       ),
     );
