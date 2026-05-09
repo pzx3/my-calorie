@@ -154,7 +154,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     icon: widget.profile.goal == 'lose' ? Icons.local_fire_department_rounded : Icons.fitness_center_rounded,
                     label: 'الهدف',
                     value: GoalType.emoji(widget.profile.goal),
-                    sub: GoalType.label(widget.profile.goal, widget.profile.gender),
+                    sub: GoalType.label(widget.profile.goal),
                     color: AppColors.gold,
                   )),
                 ]).animate().fadeIn(delay: 500.ms),

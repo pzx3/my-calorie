@@ -496,13 +496,9 @@ class _GoalPage extends StatelessWidget {
 
     String? recommended;
     if (bmi != null) {
-      if (bmi! < 18.5) {
-        recommended = 'gain';
-      } else if (bmi! >= 25.0) {
-        recommended = 'lose';
-      } else {
-        recommended = 'maintain';
-      }
+      if (bmi! < 18.5) recommended = 'gain';
+      else if (bmi! >= 25.0) recommended = 'lose';
+      else recommended = 'maintain';
     }
     final isSmartSelected = selected == recommended;
 

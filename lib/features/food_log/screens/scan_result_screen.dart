@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -95,6 +97,9 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
 
     final count = double.tryParse(_gramsCtrl.text) ?? 1.0;
     final unitWeight = double.tryParse(_unitWeightCtrl.text) ?? 100.0;
+    final totalGrams = _selectedUnit == 'جم' || _selectedUnit == 'مل'
+        ? count
+        : count * unitWeight;
 
     // القيم المدخلة للوجبة كاملة أو للحصة التي حددها المستخدم
     final cal = double.tryParse(_calCtrl.text) ?? 0.0;
@@ -214,7 +219,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<String>(
-                  initialValue: _selectedUnit,
+                  value: _selectedUnit,
                   items: _units
                       .map((u) => DropdownMenuItem(
                           value: u,

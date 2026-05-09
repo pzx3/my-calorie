@@ -51,7 +51,7 @@ class HomeScreen extends StatelessWidget {
                                 children: [
                                   const AppLogo(size: 18, showShadow: false),
                                   const SizedBox(width: 6),
-                                  Text('مرحباً${profile?.name != null ? '، ${profile.name}' : ''} 👋',
+                                  Text('مرحباً، ${profile?.name ?? (profile?.gender == 'female' ? 'صديقتي' : 'صديقي')} 👋',
                                       style: GoogleFonts.cairo(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -484,7 +484,7 @@ class _MealSection extends StatelessWidget {
               Text(MealType.emoji(mealType),
                   style: const TextStyle(fontSize: 22)),
               const SizedBox(width: 10),
-              Text(MealType.label(mealType),
+              Text(GoalType.label(mealType, state.profile?.gender ?? 'male'),
                   style: GoogleFonts.cairo(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,

@@ -804,7 +804,7 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
             Center(
               child: TextButton.icon(
                 onPressed: () async {
-                  final isFemale = widget.profile.gender == 'female';
+                  final isFemale = state.profile?.gender == 'female';
                   await NotificationService().showImmediateTestNotification(isFemale: isFemale);
                   if (context.mounted) {
                     AppNotifications.showTop(context, isFemale ? 'أبشري، بيجيك تنبيه تجريبي خلال 5 ثواني.. جربي تطلعين من التطبيق الحين!' : 'أبشر، بيجيك تنبيه تجريبي خلال 5 ثواني.. جرب تطلع من التطبيق الحين!', isError: false);
