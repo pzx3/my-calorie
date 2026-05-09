@@ -496,6 +496,14 @@ class _GoalPage extends StatelessWidget {
     final showWarning = selected == 'lose' && isUnderweight;
     final showTip = selected == 'maintain' && isUnderweight;
 
+    String? recommended;
+    if (bmi != null) {
+      if (bmi! < 18.5) recommended = 'gain';
+      else if (bmi! >= 25.0) recommended = 'lose';
+      else recommended = 'maintain';
+    }
+    final isSmartSelected = selected == recommended;
+
     return _SetupPage(
       emoji: '🎯',
       title: 'هدفك الصحي',
@@ -527,23 +535,17 @@ class _GoalPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
             ),
-            child: Column(children: [
+            child: Row(children: [
               const Icon(Icons.warning_amber_rounded, color: AppColors.coral, size: 28),
-              const SizedBox(height: 10),
-              Text(
-                'تنبيه صحي ⚠️',
-                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.coral, fontSize: 15),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'وزنك الحالي (BMI: ${bmi!.toStringAsFixed(1)}) تحت المعدل الطبيعي. لا ننصح بإنقاص الوزن في هذه المرحلة حرصاً على سلامتك.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 13, height: 1.5),
-              ),
-              Text(
-                'ننصحك باختيار "الحفاظ على الوزن" أو "زيادة الوزن".',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.cairo(color: AppColors.coral, fontWeight: FontWeight.bold, fontSize: 13),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('تنبيه صحي ⚠️', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.coral, fontSize: 14)),
+                  Text(
+                    'وزنك الحالي (${bmi!.toStringAsFixed(1)}) تحت المعدل الطبيعي. لا ننصح بإنقاص الوزن حالياً لسلامتك.',
+                    style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 12, height: 1.4),
+                  ),
+                ]),
               ),
             ]),
           ).animate().shake(duration: 500.ms).fadeIn(),
@@ -562,12 +564,33 @@ class _GoalPage extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'على الرغم من أنك تحت المعدل الطبيعي، إلا أن الحفاظ على وزنك الحالي خيار متاح إذا كنت تشعر بالراحة معه. ننصحك مستقبلاً بزيادة بسيطة لتحسين مستويات الطاقة.',
+                  'على الرغم من أنك تحت المعدل الطبيعي، إلا أن الحفاظ على وزنك الحالي خيار متاح إذا كنت مرتاحاً معه.',
                   style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 12, height: 1.5),
                 ),
               ),
             ]),
           ).animate().fadeIn(duration: 600.ms),
+        ],
+        if (isSmartSelected && !showWarning) ...[
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+            ),
+            child: Row(children: [
+              const Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'هذا هو الخيار الذكي والأفضل لحالتك الصحية بناءً على مؤشر كتلة جسمك الحالي.',
+                  style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ]),
+          ).animate().fadeIn(delay: 200.ms),
         ],
       ]),
     );
