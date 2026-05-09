@@ -161,54 +161,14 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // ── Guide Image ──
-        Container(
-          margin: const EdgeInsets.only(bottom: 24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: kIsWeb 
-              ? Container(
-                  height: 200,
-                  color: AppColors.card,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.menu_book_rounded, color: AppColors.primary, size: 40),
-                      const SizedBox(height: 12),
-                      Text('دليل القيمة الغذائية', style: GoogleFonts.cairo(color: AppColors.textSecondary, fontSize: 14)),
-                    ],
-                  ),
-                )
-              : Image.file(
-                  File('C:/Users/Abdul/.gemini/antigravity/brain/a5ca1c49-3487-4326-86c8-68480f2aa158/nutrition_label_example_1778349734050.png'),
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (ctx, _, __) => Container(
-                    height: 150,
-                    color: AppColors.card,
-                    child: const Center(
-                      child: Icon(Icons.menu_book_rounded, color: AppColors.primary, size: 40),
-                    ),
-                  ),
-                ),
-          ),
-        ),
+        // ── Premium Nutrition Label Guide Widget ──
+        _buildNutritionGuide(),
+
+        const SizedBox(height: 24),
 
         // ── بطاقة المعلومات الأساسية ──
         _buildSectionCard(
           title: 'معلومات المنتج والوجبة',
-          icon: Icons.info_outline_rounded,
           children: [
             TextField(
               controller: _nameCtrl,
@@ -244,7 +204,6 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
         // ── بطاقة حجم الحصة ──
         _buildSectionCard(
           title: 'حجم الحصة والكمية المستهلكة',
-          icon: Icons.scale_rounded,
           children: [
             Row(children: [
               Expanded(
@@ -260,7 +219,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<String>(
-                  initialValue: _selectedUnit,
+                  value: _selectedUnit,
                   items: _units
                       .map((u) => DropdownMenuItem(
                           value: u,
@@ -289,7 +248,6 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
         // ── بطاقة حقائق التغذية (لكل 100 جم) ──
         _buildSectionCard(
           title: 'حقائق التغذية (أدخل القيم لكل 100 جم)',
-          icon: Icons.fact_check_rounded,
           children: [
             _buildNutritionGrid([
               _NutrientInput(
@@ -373,10 +331,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
     );
   }
 
-  Widget _buildSectionCard(
-      {required String title,
-      required IconData icon,
-      required List<Widget> children}) {
+  Widget _buildSectionCard({required String title, required List<Widget> children}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
@@ -385,18 +340,69 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.cardBorder)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Icon(icon, color: AppColors.primary, size: 20),
-          const SizedBox(width: 8),
-          Text(title,
-              style: GoogleFonts.cairo(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary)),
-        ]),
+        Text(title,
+            style: GoogleFonts.cairo(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary)),
         const SizedBox(height: 20),
         ...children,
       ]),
+    );
+  }
+
+  Widget _buildNutritionGuide() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Nutrition Facts', style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black)),
+          Text('حقائق تغذية', style: GoogleFonts.cairo(fontSize: 12, color: Colors.black54, height: 1)),
+          const Divider(thickness: 8, color: Colors.black),
+          _guideRow('Calories / السعرات', '250', isBold: true, fontSize: 20),
+          const Divider(thickness: 4, color: Colors.black),
+          _guideRow('Total Fat / إجمالي الدهون', '8g', isBold: true),
+          _guideRow('  Saturated Fat / مشبعة', '1g', isSub: true),
+          const Divider(color: Colors.black26),
+          _guideRow('Total Carbs / الكربوهيدرات', '31g', isBold: true),
+          _guideRow('  Sugar / سكريات', '5g', isSub: true),
+          const Divider(color: Colors.black26),
+          _guideRow('Protein / بروتين', '5g', isBold: true),
+          const Divider(thickness: 8, color: Colors.black),
+          const SizedBox(height: 8),
+          Text('* اتبع القيم المكتوبة على المنتج الخاص بك', 
+            style: GoogleFonts.cairo(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _guideRow(String label, String value, {bool isBold = false, double fontSize = 13, bool isSub = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: GoogleFonts.cairo(
+            fontSize: fontSize, 
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: Colors.black,
+          )),
+          Text(value, style: GoogleFonts.inter(
+            fontSize: fontSize, 
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: Colors.black,
+          )),
+        ],
+      ),
     );
   }
 
