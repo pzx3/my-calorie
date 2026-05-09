@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -99,36 +100,34 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
         ? count
         : count * unitWeight;
 
-    // القيم المدخلة (نفترض أنها لكل 100 جرام لتسهيل الحساب)
-    final cal100 = double.tryParse(_calCtrl.text) ?? 0.0;
-    final pro100 = double.tryParse(_proCtrl.text) ?? 0.0;
-    final carb100 = double.tryParse(_carbCtrl.text) ?? 0.0;
-    final fat100 = double.tryParse(_fatCtrl.text) ?? 0.0;
-
-    final factor = totalGrams / 100.0;
+    // القيم المدخلة للوجبة كاملة أو للحصة التي حددها المستخدم
+    final cal = double.tryParse(_calCtrl.text) ?? 0.0;
+    final pro = double.tryParse(_proCtrl.text) ?? 0.0;
+    final carb = double.tryParse(_carbCtrl.text) ?? 0.0;
+    final fat = double.tryParse(_fatCtrl.text) ?? 0.0;
 
     final entry = FoodEntry(
       id: const Uuid().v4(),
       name: name,
       mealType: _selectedMeal,
       dateTime: DateTime.now(),
-      calories: cal100 * factor,
-      protein: pro100 * factor,
-      carbs: carb100 * factor,
-      fat: fat100 * factor,
-      quantity: count,
+      calories: cal,
+      protein: pro,
+      carbs: carb,
+      fat: fat,
+      quantity: double.tryParse(_gramsCtrl.text) ?? 1.0,
       unit: _selectedUnit,
-      saturatedFat: (double.tryParse(_satFatCtrl.text) ?? 0) * factor,
-      transFat: (double.tryParse(_transFatCtrl.text) ?? 0) * factor,
-      fiber: (double.tryParse(_fiberCtrl.text) ?? 0) * factor,
-      sugar: (double.tryParse(_sugarCtrl.text) ?? 0) * factor,
-      addedSugar: (double.tryParse(_addedSugarCtrl.text) ?? 0) * factor,
-      sodium: (double.tryParse(_sodiumCtrl.text) ?? 0) * factor,
-      cholesterol: (double.tryParse(_cholesterolCtrl.text) ?? 0) * factor,
-      vitaminD: (double.tryParse(_vitDCtrl.text) ?? 0) * factor,
-      calcium: (double.tryParse(_calciumCtrl.text) ?? 0) * factor,
-      iron: (double.tryParse(_ironCtrl.text) ?? 0) * factor,
-      potassium: (double.tryParse(_potassiumCtrl.text) ?? 0) * factor,
+      saturatedFat: double.tryParse(_satFatCtrl.text) ?? 0,
+      transFat: double.tryParse(_transFatCtrl.text) ?? 0,
+      fiber: double.tryParse(_fiberCtrl.text) ?? 0,
+      sugar: double.tryParse(_sugarCtrl.text) ?? 0,
+      addedSugar: double.tryParse(_addedSugarCtrl.text) ?? 0,
+      sodium: double.tryParse(_sodiumCtrl.text) ?? 0,
+      cholesterol: double.tryParse(_cholesterolCtrl.text) ?? 0,
+      vitaminD: double.tryParse(_vitDCtrl.text) ?? 0,
+      calcium: double.tryParse(_calciumCtrl.text) ?? 0,
+      iron: double.tryParse(_ironCtrl.text) ?? 0,
+      potassium: double.tryParse(_potassiumCtrl.text) ?? 0,
     );
 
     context.read<AppState>().addFoodEntry(entry);
@@ -161,6 +160,37 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        // ── Guide Image ──
+        Container(
+          margin: const EdgeInsets.only(bottom: 24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.file(
+              File('C:/Users/Abdul/.gemini/antigravity/brain/a5ca1c49-3487-4326-86c8-68480f2aa158/nutrition_label_example_1778349734050.png'),
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, _, __) => Container(
+                height: 150,
+                color: AppColors.card,
+                child: const Center(
+                  child: Icon(Icons.menu_book_rounded, color: AppColors.primary, size: 40),
+                ),
+              ),
+            ),
+          ),
+        ),
+
         // ── بطاقة المعلومات الأساسية ──
         _buildSectionCard(
           title: 'معلومات المنتج والوجبة',
