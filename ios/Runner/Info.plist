@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>نحتاج صلاحية الكاميرا لمسح ملصقات القيمة الغذائية.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>نحتاج صلاحية مكتبة الصور لاختيار صور ملصقات القيمة الغذائية.</string>
 </dict>
 </plist>

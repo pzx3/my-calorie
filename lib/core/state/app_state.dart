@@ -13,9 +13,34 @@ class AppState extends ChangeNotifier {
 
   AppState(this._prefs) {
     _loadAll();
+    refreshDay(); // فحص تغير اليوم عند بدء التطبيق
     if (_profile != null) {
       NotificationService().scheduleCalorieReminders();
     }
+  }
+
+  // ──────────────────────────── Daily Reset ────────────────────────────
+
+  /// يُستدعى عند بدء التطبيق أو العودة إليه
+  void refreshDay() {
+    final today = _todayStr();
+    final lastDay = _prefs.getString('last_active_day');
+
+    if (lastDay != null && lastDay != today) {
+      // يوم جديد → تصفير السجلات
+      _foodEntries.clear();
+      _waterEntries.clear();
+      _saveFood();
+      _saveWater();
+    }
+
+    _prefs.setString('last_active_day', today);
+    notifyListeners();
+  }
+
+  String _todayStr() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
   // ──────────────────────────── State ────────────────────────────
@@ -237,9 +262,6 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void refreshDay() {
-    notifyListeners();
-  }
 
   Future<void> updateWaterGoal(int newGoalMl) async {
     if (_profile != null) {

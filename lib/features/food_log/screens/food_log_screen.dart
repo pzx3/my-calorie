@@ -9,6 +9,7 @@ import '../../../core/models/food_entry.dart';
 import '../../../core/utils/calorie_calculator.dart';
 import '../../../shared/widgets/macro_row.dart';
 import '../../home/widgets/macro_share_preview.dart';
+import 'scan_result_screen.dart';
 
 class FoodLogScreen extends StatelessWidget {
   const FoodLogScreen({super.key, this.initialMeal});
@@ -48,12 +49,26 @@ class FoodLogScreen extends StatelessWidget {
           ).animate().fadeIn(duration: 600.ms).moveX(begin: 30, end: 0, curve: Curves.easeOutQuad);
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'food_fab',
-        onPressed: () => showAddFoodSheet(context, initialMeal ?? MealType.breakfast),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-        label: Text('أضف طعام', style: GoogleFonts.cairo(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold)),
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: 'scan_fab',
+            onPressed: () => Navigator.push(context, MaterialPageRoute(
+              builder: (_) => NutritionScanScreen(mealType: initialMeal ?? MealType.breakfast),
+            )),
+            backgroundColor: AppColors.teal,
+            child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 22),
+          ),
+          const SizedBox(width: 12),
+          FloatingActionButton.extended(
+            heroTag: 'food_fab',
+            onPressed: () => showAddFoodSheet(context, initialMeal ?? MealType.breakfast),
+            backgroundColor: AppColors.primary,
+            icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+            label: Text('أضف طعام', style: GoogleFonts.cairo(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

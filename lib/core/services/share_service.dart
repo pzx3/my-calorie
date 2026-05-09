@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import '../models/food_entry.dart';
 import '../theme/app_colors.dart';
 
@@ -12,47 +13,108 @@ class ShareService {
   static final ScreenshotController screenshotController = ScreenshotController();
 
   static Future<void> shareFoodMacros(BuildContext context, FoodEntry entry) async {
-    // Show a loading indicator
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 16),
+            Text('مشاركة الماكروز', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            const SizedBox(height: 16),
+            _ShareOption(
+              icon: Icons.share_rounded,
+              color: AppColors.primary,
+              label: 'مشاركة عبر التطبيقات',
+              subtitle: 'واتساب، تويتر، وغيرها',
+              onTap: () {
+                Navigator.pop(ctx);
+                _shareToApps(context, entry);
+              },
+            ),
+            const SizedBox(height: 8),
+            _ShareOption(
+              icon: Icons.save_alt_rounded,
+              color: AppColors.teal,
+              label: 'حفظ في الصور',
+              subtitle: 'حفظ كصورة في معرض الصور',
+              onTap: () {
+                Navigator.pop(ctx);
+                _saveToGallery(context, entry);
+              },
+            ),
+            const SizedBox(height: 8),
+          ]),
+        ),
+      ),
     );
+  }
 
+  static Future<Uint8List> _captureImage(BuildContext context, FoodEntry entry) async {
+    return await screenshotController.captureFromWidget(
+      _buildShareCard(entry),
+      delay: const Duration(milliseconds: 100),
+      context: context,
+    );
+  }
+
+  static Future<void> _shareToApps(BuildContext context, FoodEntry entry) async {
+    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.primary)));
     try {
-      final image = await screenshotController.captureFromWidget(
-        _buildShareCard(entry),
-        delay: const Duration(milliseconds: 100),
-        context: context,
-      );
-
-      // Hide loading
+      final image = await _captureImage(context, entry);
       if (context.mounted) Navigator.pop(context);
 
-      final fileName = 'food_macros_${DateTime.now().millisecondsSinceEpoch}.png';
-
+      final fileName = 'macros_${DateTime.now().millisecondsSinceEpoch}.png';
       if (kIsWeb) {
         // ignore: deprecated_member_use
-        await Share.shareXFiles(
-          [XFile.fromData(image, name: fileName, mimeType: 'image/png')],
-          text: 'ماكروز وجبتي: ${entry.name} 🥗',
-        );
+        await Share.shareXFiles([XFile.fromData(image, name: fileName, mimeType: 'image/png')], text: 'ماكروز وجبتي: ${entry.name} 🥗');
       } else {
-        final directory = await getTemporaryDirectory();
-        final imageFile = File('${directory.path}/$fileName');
-        await imageFile.writeAsBytes(image);
-
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsBytes(image);
         // ignore: deprecated_member_use
-        await Share.shareXFiles(
-          [XFile(imageFile.path)],
-          text: 'ماكروز وجبتي: ${entry.name} 🥗',
-        );
+        await Share.shareXFiles([XFile(file.path)], text: 'ماكروز وجبتي: ${entry.name} 🥗');
       }
     } catch (e) {
       if (context.mounted) Navigator.pop(context);
-      debugPrint('Error sharing image: $e');
+      debugPrint('Error sharing: $e');
     }
   }
+
+  static Future<void> _saveToGallery(BuildContext context, FoodEntry entry) async {
+    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.teal)));
+    try {
+      final image = await _captureImage(context, entry);
+      if (context.mounted) Navigator.pop(context);
+
+      final result = await ImageGallerySaverPlus.saveImage(image, quality: 100, name: 'macros_${DateTime.now().millisecondsSinceEpoch}');
+      if (context.mounted) {
+        final success = result['isSuccess'] == true;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(success ? '✅ تم حفظ الصورة في المعرض' : '❌ فشل حفظ الصورة', style: GoogleFonts.cairo(color: Colors.white)),
+          backgroundColor: success ? AppColors.teal : AppColors.coral,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ));
+      }
+    } catch (e) {
+      if (context.mounted) Navigator.pop(context);
+      debugPrint('Error saving to gallery: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('❌ فشل حفظ الصورة', style: GoogleFonts.cairo(color: Colors.white)),
+          backgroundColor: AppColors.coral,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    }
+  }
+
 
   static Widget _buildShareCard(FoodEntry entry) {
     return Container(
@@ -213,4 +275,38 @@ class ShareService {
       ],
     );
   }
+}
+
+class _ShareOption extends StatelessWidget {
+  const _ShareOption({required this.icon, required this.color, required this.label, required this.subtitle, required this.onTap});
+  final IconData icon;
+  final Color color;
+  final String label, subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: color, size: 22),
+        ),
+        const SizedBox(width: 14),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Text(subtitle, style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
+        ])),
+        Icon(Icons.arrow_forward_ios_rounded, color: color, size: 16),
+      ]),
+    ),
+  );
 }
