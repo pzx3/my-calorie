@@ -64,7 +64,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
             child: Column(
               children: [
                 // ── Header ──
-                const Text('🌟', style: TextStyle(fontSize: 40))
+                const Text('🎉', style: TextStyle(fontSize: 40))
                     .animate().scale(duration: 600.ms, curve: Curves.elasticOut),
                 const SizedBox(height: 6),
                 Text('نتائجك الشخصية',

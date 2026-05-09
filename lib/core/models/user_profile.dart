@@ -29,12 +29,12 @@ class ActivityLevel {
   }[v] ?? 1.2;
 
   static String emoji(String v) => const {
-    'sedentary':  '🧘',
-    'light':      '👟',
-    'moderate':   '⚡',
-    'active':     '🏋️',
-    'veryActive': '🚀',
-  }[v] ?? '🧘';
+    'sedentary':  '🛋️',
+    'light':      '🚶',
+    'moderate':   '🏃',
+    'active':     '💪',
+    'veryActive': '🔥',
+  }[v] ?? '🛋️';
 }
 
 class GoalType {
@@ -52,7 +52,7 @@ class GoalType {
       const {'lose': -500, 'maintain': 0, 'gain': 300}[v] ?? 0;
 
   static String emoji(String v) =>
-      const {'lose': '🥗', 'maintain': '💎', 'gain': '🦾'}[v] ?? '💎';
+      const {'lose': '🔥', 'maintain': '⚖️', 'gain': '💪'}[v] ?? '⚖️';
 }
 
 class UserProfile {
@@ -153,9 +153,9 @@ class UserProfile {
 
       String label;
       if (i == 0) {
-        label = 'كوب الصباح ☀️';
+        label = 'كوب الصباح 🌅';
       } else if (i == doses - 1) {
-        label = 'كوب قبل النوم 🌌';
+        label = 'كوب قبل النوم 🌙';
       } else {
         label = 'كوب رقم ${i + 1}';
       }
