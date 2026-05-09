@@ -548,7 +548,7 @@ class _GoalPage extends StatelessWidget {
                 ]),
               ),
             ]),
-          ).animate().shake(duration: 500.ms).fadeIn(),
+          ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
         ],
         if (showTip) ...[
           const SizedBox(height: 20),
