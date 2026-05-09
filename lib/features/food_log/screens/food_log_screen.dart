@@ -289,7 +289,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(colors: [AppColors.primary, AppColors.teal]),
                             borderRadius: BorderRadius.circular(16),
-                            boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))],
+                            boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4))],
                           ),
                           child: Row(children: [
                             const Icon(Icons.fact_check_rounded, color: Colors.white, size: 24),

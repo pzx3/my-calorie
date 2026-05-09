@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -22,16 +21,16 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   final _proCtrl = TextEditingController();
   final _carbCtrl = TextEditingController();
   final _fatCtrl = TextEditingController();
-  
+
   // الدهون المفصلة
   final _satFatCtrl = TextEditingController();
   final _transFatCtrl = TextEditingController();
-  
+
   // الكربوهيدرات المفصلة
   final _fiberCtrl = TextEditingController();
   final _sugarCtrl = TextEditingController();
   final _addedSugarCtrl = TextEditingController();
-  
+
   // المعادن والفيتامينات
   final _sodiumCtrl = TextEditingController();
   final _cholesterolCtrl = TextEditingController();
@@ -41,12 +40,21 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   final _potassiumCtrl = TextEditingController();
 
   final _gramsCtrl = TextEditingController(text: '1'); // عدد الحصص
-  final _unitWeightCtrl = TextEditingController(text: '100'); // وزن الحصة الواحدة بالجرام
+  final _unitWeightCtrl =
+      TextEditingController(text: '100'); // وزن الحصة الواحدة بالجرام
 
   String _selectedUnit = 'جم';
   String _selectedMeal = MealType.breakfast;
 
-  final List<String> _units = ['جم', 'مل', 'قطعة', 'كوب', 'ملعقة', 'عبوة', 'حصة'];
+  final List<String> _units = [
+    'جم',
+    'مل',
+    'قطعة',
+    'كوب',
+    'ملعقة',
+    'عبوة',
+    'حصة'
+  ];
 
   @override
   void initState() {
@@ -56,30 +64,47 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _calCtrl.dispose(); _proCtrl.dispose(); _carbCtrl.dispose(); _fatCtrl.dispose();
-    _satFatCtrl.dispose(); _transFatCtrl.dispose(); _fiberCtrl.dispose(); _sugarCtrl.dispose(); _addedSugarCtrl.dispose();
-    _sodiumCtrl.dispose(); _cholesterolCtrl.dispose(); _vitDCtrl.dispose(); _calciumCtrl.dispose(); _ironCtrl.dispose(); _potassiumCtrl.dispose();
-    _gramsCtrl.dispose(); _unitWeightCtrl.dispose();
+    _nameCtrl.dispose();
+    _calCtrl.dispose();
+    _proCtrl.dispose();
+    _carbCtrl.dispose();
+    _fatCtrl.dispose();
+    _satFatCtrl.dispose();
+    _transFatCtrl.dispose();
+    _fiberCtrl.dispose();
+    _sugarCtrl.dispose();
+    _addedSugarCtrl.dispose();
+    _sodiumCtrl.dispose();
+    _cholesterolCtrl.dispose();
+    _vitDCtrl.dispose();
+    _calciumCtrl.dispose();
+    _ironCtrl.dispose();
+    _potassiumCtrl.dispose();
+    _gramsCtrl.dispose();
+    _unitWeightCtrl.dispose();
     super.dispose();
   }
 
   void _addToLog() {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('أدخل اسم المنتج')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('أدخل اسم المنتج')));
       return;
     }
 
     final count = double.tryParse(_gramsCtrl.text) ?? 1.0;
     final unitWeight = double.tryParse(_unitWeightCtrl.text) ?? 100.0;
-    final totalGrams = _selectedUnit == 'جم' || _selectedUnit == 'مل' ? count : count * unitWeight;
+    final totalGrams = _selectedUnit == 'جم' || _selectedUnit == 'مل'
+        ? count
+        : count * unitWeight;
 
     // القيم المدخلة (نفترض أنها لكل 100 جرام لتسهيل الحساب)
     final cal100 = double.tryParse(_calCtrl.text) ?? 0.0;
     final pro100 = double.tryParse(_proCtrl.text) ?? 0.0;
     final carb100 = double.tryParse(_carbCtrl.text) ?? 0.0;
     final fat100 = double.tryParse(_fatCtrl.text) ?? 0.0;
-    
+
     final factor = totalGrams / 100.0;
 
     final entry = FoodEntry(
@@ -117,9 +142,16 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text('إدخال يدوي للقيمة الغذائية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        title: Text('إدخال يدوي للقيمة الغذائية',
+            style: GoogleFonts.cairo(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary)),
         centerTitle: true,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textSecondary), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: AppColors.textSecondary),
+            onPressed: () => Navigator.pop(context)),
       ),
       body: _buildManualEntryForm(),
     );
@@ -136,22 +168,31 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
           children: [
             TextField(
               controller: _nameCtrl,
-              decoration: _inputDecoration('اسم المنتج (مثل: تفاحة، حليب...)', Icons.edit_rounded),
+              decoration: _inputDecoration(
+                  'اسم المنتج (مثل: تفاحة، حليب...)', Icons.edit_rounded),
               style: GoogleFonts.cairo(fontSize: 14),
             ),
             const SizedBox(height: 16),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row(children: MealType.all.map((m) => Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: ChoiceChip(
-                  label: Text(MealType.label(m), style: GoogleFonts.cairo(fontSize: 11)),
-                  selected: _selectedMeal == m,
-                  onSelected: (s) => setState(() => _selectedMeal = m),
-                  selectedColor: AppColors.primary,
-                  labelStyle: TextStyle(color: _selectedMeal == m ? Colors.white : AppColors.textSecondary),
-                ),
-              )).toList()),
+              child: Row(
+                  children: MealType.all
+                      .map((m) => Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: ChoiceChip(
+                              label: Text(MealType.label(m),
+                                  style: GoogleFonts.cairo(fontSize: 11)),
+                              selected: _selectedMeal == m,
+                              onSelected: (s) =>
+                                  setState(() => _selectedMeal = m),
+                              selectedColor: AppColors.primary,
+                              labelStyle: TextStyle(
+                                  color: _selectedMeal == m
+                                      ? Colors.white
+                                      : AppColors.textSecondary),
+                            ),
+                          ))
+                      .toList()),
             ),
           ],
         ),
@@ -167,17 +208,24 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
                 child: TextField(
                   controller: _gramsCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: _inputDecoration('الكمية', Icons.onetwothree_rounded),
+                  decoration:
+                      _inputDecoration('الكمية', Icons.onetwothree_rounded),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<String>(
-                  value: _selectedUnit,
-                  items: _units.map((u) => DropdownMenuItem(value: u, child: Text(u, style: GoogleFonts.cairo(fontSize: 14)))).toList(),
+                  initialValue: _selectedUnit,
+                  items: _units
+                      .map((u) => DropdownMenuItem(
+                          value: u,
+                          child:
+                              Text(u, style: GoogleFonts.cairo(fontSize: 14))))
+                      .toList(),
                   onChanged: (v) => setState(() => _selectedUnit = v!),
-                  decoration: _inputDecoration('الوحدة', Icons.unfold_more_rounded),
+                  decoration:
+                      _inputDecoration('الوحدة', Icons.unfold_more_rounded),
                 ),
               ),
             ]),
@@ -186,7 +234,9 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
               TextField(
                 controller: _unitWeightCtrl,
                 keyboardType: TextInputType.number,
-                decoration: _inputDecoration('وزن الـ $_selectedUnit الواحدة (جم)', Icons.balance_rounded),
+                decoration: _inputDecoration(
+                    'وزن الـ $_selectedUnit الواحدة (جم)',
+                    Icons.balance_rounded),
               ),
             ],
           ],
@@ -198,34 +248,59 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
           icon: Icons.fact_check_rounded,
           children: [
             _buildNutritionGrid([
-              _NutrientInput(ctrl: _calCtrl, label: 'سعرات', color: AppColors.primary),
-              _NutrientInput(ctrl: _proCtrl, label: 'بروتين', color: AppColors.protein),
-              _NutrientInput(ctrl: _carbCtrl, label: 'كارب', color: AppColors.carbs),
-              _NutrientInput(ctrl: _fatCtrl, label: 'دهون', color: AppColors.fat),
+              _NutrientInput(
+                  ctrl: _calCtrl, label: 'سعرات', color: AppColors.primary),
+              _NutrientInput(
+                  ctrl: _proCtrl, label: 'بروتين', color: AppColors.protein),
+              _NutrientInput(
+                  ctrl: _carbCtrl, label: 'كارب', color: AppColors.carbs),
+              _NutrientInput(
+                  ctrl: _fatCtrl, label: 'دهون', color: AppColors.fat),
             ]),
             const Divider(height: 32),
-            Text('الدهون التفصيلية', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+            Text('الدهون التفصيلية',
+                style: GoogleFonts.cairo(
+                    fontSize: 12, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             _buildNutritionGrid([
-              _NutrientInput(ctrl: _satFatCtrl, label: 'مشبعة', color: AppColors.fat),
-              _NutrientInput(ctrl: _transFatCtrl, label: 'متحولة', color: AppColors.fat),
-              _NutrientInput(ctrl: _cholesterolCtrl, label: 'كوليسترول', color: AppColors.fat),
-              _NutrientInput(ctrl: _sodiumCtrl, label: 'صوديوم', color: Colors.orange),
+              _NutrientInput(
+                  ctrl: _satFatCtrl, label: 'مشبعة', color: AppColors.fat),
+              _NutrientInput(
+                  ctrl: _transFatCtrl, label: 'متحولة', color: AppColors.fat),
+              _NutrientInput(
+                  ctrl: _cholesterolCtrl,
+                  label: 'كوليسترول',
+                  color: AppColors.fat),
+              _NutrientInput(
+                  ctrl: _sodiumCtrl, label: 'صوديوم', color: Colors.orange),
             ]),
             const Divider(height: 32),
-            Text('الكربوهيدرات والمعادن', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+            Text('الكربوهيدرات والمعادن',
+                style: GoogleFonts.cairo(
+                    fontSize: 12, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             _buildNutritionGrid([
-              _NutrientInput(ctrl: _fiberCtrl, label: 'ألياف', color: Colors.green),
-              _NutrientInput(ctrl: _sugarCtrl, label: 'سكر', color: Colors.pink),
-              _NutrientInput(ctrl: _addedSugarCtrl, label: 'سكر مضاف', color: Colors.redAccent),
-              _NutrientInput(ctrl: _vitDCtrl, label: 'فيتامين D', color: Colors.amber),
+              _NutrientInput(
+                  ctrl: _fiberCtrl, label: 'ألياف', color: Colors.green),
+              _NutrientInput(
+                  ctrl: _sugarCtrl, label: 'سكر', color: Colors.pink),
+              _NutrientInput(
+                  ctrl: _addedSugarCtrl,
+                  label: 'سكر مضاف',
+                  color: Colors.redAccent),
+              _NutrientInput(
+                  ctrl: _vitDCtrl, label: 'فيتامين D', color: Colors.amber),
             ]),
             const SizedBox(height: 12),
             _buildNutritionGrid([
-              _NutrientInput(ctrl: _calciumCtrl, label: 'كالسيوم', color: Colors.blueGrey),
-              _NutrientInput(ctrl: _ironCtrl, label: 'حديد', color: Colors.brown),
-              _NutrientInput(ctrl: _potassiumCtrl, label: 'بوتاسيوم', color: Colors.deepPurple),
+              _NutrientInput(
+                  ctrl: _calciumCtrl, label: 'كالسيوم', color: Colors.blueGrey),
+              _NutrientInput(
+                  ctrl: _ironCtrl, label: 'حديد', color: Colors.brown),
+              _NutrientInput(
+                  ctrl: _potassiumCtrl,
+                  label: 'بوتاسيوم',
+                  color: Colors.deepPurple),
               const SizedBox.shrink(),
             ]),
           ],
@@ -239,9 +314,14 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
-            child: Text('حفظ في السجل', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+            child: Text('حفظ في السجل',
+                style: GoogleFonts.cairo(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
           ),
         ),
         const SizedBox(height: 40),
@@ -249,16 +329,26 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
     );
   }
 
-  Widget _buildSectionCard({required String title, required IconData icon, required List<Widget> children}) {
+  Widget _buildSectionCard(
+      {required String title,
+      required IconData icon,
+      required List<Widget> children}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.cardBorder)),
+      decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.cardBorder)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Icon(icon, color: AppColors.primary, size: 20),
           const SizedBox(width: 8),
-          Text(title, style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Text(title,
+              style: GoogleFonts.cairo(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary)),
         ]),
         const SizedBox(height: 20),
         ...children,
@@ -267,23 +357,33 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   }
 
   Widget _buildNutritionGrid(List<Widget> items) {
-    return Row(children: items.map((it) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: it))).toList());
+    return Row(
+        children: items
+            .map((it) => Expanded(
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: it)))
+            .toList());
   }
 
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon, size: 18, color: AppColors.textSecondary),
-      labelStyle: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
-      filled: true, fillColor: AppColors.background,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      labelStyle:
+          GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+      filled: true,
+      fillColor: AppColors.background,
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
   }
 }
 
 class _NutrientInput extends StatelessWidget {
-  const _NutrientInput({required this.ctrl, required this.label, required this.color});
+  const _NutrientInput(
+      {required this.ctrl, required this.label, required this.color});
   final TextEditingController ctrl;
   final String label;
   final Color color;
@@ -295,15 +395,20 @@ class _NutrientInput extends StatelessWidget {
         controller: ctrl,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         textAlign: TextAlign.center,
-        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: color),
+        style: GoogleFonts.outfit(
+            fontSize: 14, fontWeight: FontWeight.bold, color: color),
         decoration: InputDecoration(
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 10),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color.withOpacity(0.2))),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: color.withValues(alpha: 0.2))),
         ),
       ),
       const SizedBox(height: 6),
-      Text(label, style: GoogleFonts.cairo(fontSize: 9, color: AppColors.textSecondary), textAlign: TextAlign.center),
+      Text(label,
+          style: GoogleFonts.cairo(fontSize: 9, color: AppColors.textSecondary),
+          textAlign: TextAlign.center),
     ]);
   }
 }

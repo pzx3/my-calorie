@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mycalorie</string>
+	<string>سعراتي</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -67,8 +67,10 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>نحتاج صلاحية الكاميرا لمسح ملصقات القيمة الغذائية.</string>
+	<string>نحتاج الوصول للكاميرا لمسح باركود المنتجات وحساب سعراتها.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>نحتاج صلاحية مكتبة الصور لاختيار صور ملصقات القيمة الغذائية.</string>
+	<string>نحتاج الوصول لمكتبة الصور لاختيار صور الوجبات.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>نحتاج الوصول للميكروفون لتسجيل الفيديو.</string>
 </dict>
 </plist>
