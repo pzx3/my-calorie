@@ -48,6 +48,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
     }
 
     if (_page < _totalPages - 1) {
+      // Smart Auto-Goal Selection
+      if (_page == 2) {
+        final bmi = _bmi;
+        if (bmi != null && bmi < 18.5) {
+          _goal = 'gain';
+        }
+      }
+
       _pageCtrl.nextPage(
           duration: const Duration(milliseconds: 500), curve: Curves.easeOutCubic);
       setState(() => _page++);
