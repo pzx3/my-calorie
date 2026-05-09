@@ -1,16 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/food_entry.dart';
-import '../../../core/services/nutrition_label_service.dart';
 
-/// شاشة مسح ملصق القيمة الغذائية
+/// شاشة إدخال القيمة الغذائية يدوياً
 class NutritionScanScreen extends StatefulWidget {
   const NutritionScanScreen({super.key, required this.mealType});
   final String mealType;
@@ -20,11 +17,7 @@ class NutritionScanScreen extends StatefulWidget {
 }
 
 class _NutritionScanScreenState extends State<NutritionScanScreen> {
-  final _picker = ImagePicker();
-  bool _isScanning = false;
-  NutritionLabel? _label;
-  String? _error;
-  final _nameCtrl = TextEditingController(text: 'منتج غذائي');
+  final _nameCtrl = TextEditingController(text: '');
   final _calCtrl = TextEditingController();
   final _proCtrl = TextEditingController();
   final _carbCtrl = TextEditingController();
@@ -52,7 +45,6 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
 
   String _selectedUnit = 'جم';
   String _selectedMeal = MealType.breakfast;
-  File? _imageFile;
 
   final List<String> _units = ['جم', 'مل', 'قطعة', 'كوب', 'ملعقة', 'عبوة', 'حصة'];
 
@@ -60,7 +52,6 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   void initState() {
     super.initState();
     _selectedMeal = widget.mealType;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startScan());
   }
 
   @override
@@ -70,68 +61,6 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
     _sodiumCtrl.dispose(); _cholesterolCtrl.dispose(); _vitDCtrl.dispose(); _calciumCtrl.dispose(); _ironCtrl.dispose(); _potassiumCtrl.dispose();
     _gramsCtrl.dispose(); _unitWeightCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _startScan() async {
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: const BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.cardBorder, borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 24),
-          Text('تصوير الملصق للمعالجة', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          const SizedBox(height: 20),
-          _SourceOption(
-            icon: Icons.camera_alt_rounded,
-            color: AppColors.primary,
-            label: 'التقاط بالكاميرا',
-            subtitle: 'استخدم الكاميرا لمسح الملصق',
-            onTap: () => Navigator.pop(ctx, ImageSource.camera),
-          ),
-          const SizedBox(height: 12),
-          _SourceOption(
-            icon: Icons.photo_library_rounded,
-            color: AppColors.teal,
-            label: 'اختيار من المعرض',
-            subtitle: 'اختر صورة موجودة',
-            onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-          ),
-          const SizedBox(height: 8),
-        ]),
-      ),
-    );
-
-    if (source == null) {
-      if (mounted && _label == null) Navigator.pop(context);
-      return;
-    }
-    await _processImage(source);
-  }
-
-  Future<void> _processImage(ImageSource source) async {
-    try {
-      final picked = await _picker.pickImage(source: source, maxWidth: 1920, imageQuality: 90);
-      if (picked == null) {
-        if (mounted && _label == null) Navigator.pop(context);
-        return;
-      }
-      final file = File(picked.path);
-      setState(() { _isScanning = true; _error = null; _imageFile = file; });
-      
-      // نقوم بالمسح لكن لا نعبئ البيانات آلياً بناءً على طلب المستخدم
-      final label = await NutritionLabelService.scanImage(file);
-      
-      if (!mounted) return;
-      setState(() {
-        _isScanning = false;
-        _label = label ?? NutritionLabel(caloriesPer100g: 0, proteinPer100g: 0, carbsPer100g: 0, fatPer100g: 0, rawText: '');
-      });
-    } catch (e) {
-      if (mounted) setState(() { _isScanning = false; _error = 'حصل خطأ أثناء المعالجة.'; });
-    }
   }
 
   void _addToLog() {
@@ -188,37 +117,13 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text('إدخال القيمة الغذائية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        title: Text('إدخال يدوي للقيمة الغذائية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         centerTitle: true,
-        leading: IconButton(icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textSecondary), onPressed: () => Navigator.pop(context)),
       ),
-      body: _isScanning
-          ? _buildScanningState()
-          : _error != null
-              ? _buildErrorState()
-              : _label != null
-                  ? _buildManualEntryForm()
-                  : const SizedBox.shrink(),
+      body: _buildManualEntryForm(),
     );
   }
-
-  Widget _buildScanningState() => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const CircularProgressIndicator(color: AppColors.primary),
-      const SizedBox(height: 24),
-      Text('جاري معالجة الصورة...', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold)),
-    ]),
-  );
-
-  Widget _buildErrorState() => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Icon(Icons.error_outline_rounded, color: AppColors.coral, size: 64),
-      const SizedBox(height: 16),
-      Text(_error!, style: GoogleFonts.cairo(color: AppColors.textSecondary)),
-      const SizedBox(height: 24),
-      ElevatedButton(onPressed: _startScan, child: const Text('إعادة المحاولة')),
-    ]),
-  );
 
   Widget _buildManualEntryForm() {
     return ListView(
@@ -231,7 +136,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
           children: [
             TextField(
               controller: _nameCtrl,
-              decoration: _inputDecoration('اسم المنتج', Icons.edit_rounded),
+              decoration: _inputDecoration('اسم المنتج (مثل: تفاحة، حليب...)', Icons.edit_rounded),
               style: GoogleFonts.cairo(fontSize: 14),
             ),
             const SizedBox(height: 16),
@@ -394,7 +299,7 @@ class _NutrientInput extends StatelessWidget {
         decoration: InputDecoration(
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 10),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color.withValues(alpha: 0.2))),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color.withOpacity(0.2))),
         ),
       ),
       const SizedBox(height: 6),
@@ -402,48 +307,3 @@ class _NutrientInput extends StatelessWidget {
     ]);
   }
 }
-
-class _FinalValue extends StatelessWidget {
-  const _FinalValue({required this.label, required this.value, required this.color});
-  final String label, value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [
-      Text(value, style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
-      Text(label, style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
-    ]);
-  }
-}
-
-class _SourceOption extends StatelessWidget {
-  const _SourceOption({required this.icon, required this.color, required this.label, required this.subtitle, required this.onTap});
-  final IconData icon;
-  final Color color;
-  final String label, subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.1))),
-        child: Row(children: [
-          Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 24)),
-          const SizedBox(width: 16),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label, style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            Text(subtitle, style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
-          ])),
-          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textHint),
-        ]),
-      ),
-    );
-  }
-    );
-  }
-}
-

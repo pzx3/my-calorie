@@ -287,27 +287,22 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [AppColors.teal, AppColors.primary.withValues(alpha: 0.8)]),
+                            gradient: LinearGradient(colors: [AppColors.primary, AppColors.teal]),
                             borderRadius: BorderRadius.circular(16),
-                            boxShadow: [BoxShadow(color: AppColors.teal.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                            boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))],
                           ),
                           child: Row(children: [
-                            const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 24),
+                            const Icon(Icons.fact_check_rounded, color: Colors.white, size: 24),
                             const SizedBox(width: 12),
                             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text('مسح ملصق القيمة الغذائية', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-                              Text('صور الملصق وسنقرأ البيانات تلقائياً', style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70)),
+                              Text('إدخال يدوي تفصيلي', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                              Text('أدخل الماكروز والمصادر الغذائية بدقة', style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70)),
                             ])),
                             const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
                           ]),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Row(children: [
-                        const Expanded(child: Divider(color: AppColors.cardBorder, indent: 0, endIndent: 10)),
-                        Text('أو إدخال يدوي', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textHint)),
-                        const Expanded(child: Divider(color: AppColors.cardBorder, indent: 10, endIndent: 0)),
-                      ]),
+                      const SizedBox(height: 20),
                     ],
                     const SizedBox(height: 12),
                     // Meal selector

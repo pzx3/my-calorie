@@ -28,7 +28,6 @@ dependencies:
   share_plus: ^13.1.0
   image_gallery_saver_plus: ^4.0.1
   image_picker: ^1.2.2
-  huawei_scan: ^2.12.0+304
 
 dev_dependencies:
   flutter_test:
