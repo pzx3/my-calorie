@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -175,19 +176,32 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: Image.file(
-              File('C:/Users/Abdul/.gemini/antigravity/brain/a5ca1c49-3487-4326-86c8-68480f2aa158/nutrition_label_example_1778349734050.png'),
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (ctx, _, __) => Container(
-                height: 150,
-                color: AppColors.card,
-                child: const Center(
-                  child: Icon(Icons.menu_book_rounded, color: AppColors.primary, size: 40),
+            child: kIsWeb 
+              ? Container(
+                  height: 200,
+                  color: AppColors.card,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.menu_book_rounded, color: AppColors.primary, size: 40),
+                      const SizedBox(height: 12),
+                      Text('دليل القيمة الغذائية', style: GoogleFonts.cairo(color: AppColors.textSecondary, fontSize: 14)),
+                    ],
+                  ),
+                )
+              : Image.file(
+                  File('C:/Users/Abdul/.gemini/antigravity/brain/a5ca1c49-3487-4326-86c8-68480f2aa158/nutrition_label_example_1778349734050.png'),
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, _, __) => Container(
+                    height: 150,
+                    color: AppColors.card,
+                    child: const Center(
+                      child: Icon(Icons.menu_book_rounded, color: AppColors.primary, size: 40),
+                    ),
+                  ),
                 ),
-              ),
-            ),
           ),
         ),
 
