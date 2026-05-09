@@ -219,29 +219,66 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     Text('$_customKcal', style: GoogleFonts.cairo(fontSize: 36, fontWeight: FontWeight.w900, color: AppColors.primary, height: 1.1)),
                     Text('سعرة / يوم', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textSecondary)),
                     const SizedBox(height: 4),
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: AppColors.primary,
-                        inactiveTrackColor: AppColors.cardBorder,
-                        thumbColor: AppColors.primary,
-                        overlayColor: AppColors.primary.withValues(alpha: 0.15),
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-                        trackHeight: 4,
-                      ),
-                      child: Slider(
-                        value: _customKcal.toDouble(),
-                        min: _minKcal.toDouble(),
-                        max: _maxKcal.toDouble(),
-                        divisions: ((_maxKcal - _minKcal) / 50).round().clamp(1, 100),
-                        onChanged: (v) => setState(() => _customKcal = (v / 50).round() * 50),
-                      ),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: AppColors.primary,
+                            inactiveTrackColor: AppColors.cardBorder,
+                            thumbColor: AppColors.primary,
+                            overlayColor: AppColors.primary.withValues(alpha: 0.15),
+                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+                            trackHeight: 4,
+                          ),
+                          child: Slider(
+                            value: _customKcal.toDouble(),
+                            min: _minKcal.toDouble(),
+                            max: _maxKcal.toDouble(),
+                            divisions: ((_maxKcal - _minKcal) / 50).round().clamp(1, 100),
+                            onChanged: (v) => setState(() => _customKcal = (v / 50).round() * 50),
+                          ),
+                        ),
+                        // Recommended Marker
+                        LayoutBuilder(builder: (context, constraints) {
+                          final recommended = widget.profile.tdeeKcal;
+                          final double padding = 24.0; // Estimate slider padding
+                          final double width = constraints.maxWidth - (padding * 2);
+                          final double percent = (recommended - _minKcal) / (_maxKcal - _minKcal);
+                          
+                          return Positioned(
+                            left: padding + (width * percent) - 1,
+                            top: 10,
+                            bottom: 10,
+                            child: GestureDetector(
+                              onTap: () => setState(() => _customKcal = recommended),
+                              child: Container(
+                                width: 2,
+                                color: Colors.white24,
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('$_minKcal', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textHint)),
+                          GestureDetector(
+                            onTap: () => setState(() => _customKcal = widget.profile.tdeeKcal),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text('الموصى به: ${widget.profile.tdeeKcal}', 
+                                style: GoogleFonts.cairo(fontSize: 9, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
                           Text('$_maxKcal', style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textHint)),
                         ],
                       ),
