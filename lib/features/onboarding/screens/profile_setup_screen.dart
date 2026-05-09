@@ -70,10 +70,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
         if (hErr != null) return hErr;
         return Validator.weight(_weightCtrl.text);
       case 4:
-        final bmi = _bmi;
-        if (_goal == 'lose' && bmi != null && bmi < 18.5) {
-          return 'وزنك الحالي تحت المعدل الطبيعي (نحافة). لا ننصح بإنقاص الوزن في هذه المرحلة، وننصحك باختيار هدف "الحفاظ على الوزن" أو "زيادة الوزن".';
-        }
         return null;
       default:
         return null;
@@ -211,6 +207,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                         onSelect: (v) => setState(() => _activity = v)),
                     _GoalPage(
                         selected: _goal,
+                        bmi: _bmi,
                         onSelect: (v) => setState(() => _goal = v)),
                     _SchedulePage(
                         wakeHour: _wakeHour,
@@ -475,34 +472,70 @@ class _ActivityBtn extends StatelessWidget {
 }
 
 class _GoalPage extends StatelessWidget {
-  const _GoalPage({required this.selected, required this.onSelect});
+  const _GoalPage({required this.selected, required this.bmi, required this.onSelect});
   final String selected;
+  final double? bmi;
   final ValueChanged<String> onSelect;
   @override
-  Widget build(BuildContext context) => _SetupPage(
-        emoji: '🎯',
-        title: 'هدفك الصحي',
-        subtitle: 'سنحسب سعراتك بناءً على هدفك',
-        child: Column(children: [
-          _GoalBtn(
-              value: 'lose',
-              color: AppColors.coral,
-              selected: selected,
-              onSelect: onSelect),
-          const SizedBox(height: 12),
-          _GoalBtn(
-              value: 'maintain',
-              color: AppColors.teal,
-              selected: selected,
-              onSelect: onSelect),
-          const SizedBox(height: 12),
-          _GoalBtn(
-              value: 'gain',
-              color: AppColors.primary,
-              selected: selected,
-              onSelect: onSelect),
-        ]),
-      );
+  Widget build(BuildContext context) {
+    final showWarning = selected == 'lose' && bmi != null && bmi! < 18.5;
+
+    return _SetupPage(
+      emoji: '🎯',
+      title: 'هدفك الصحي',
+      subtitle: 'سنحسب سعراتك بناءً على هدفك',
+      child: Column(children: [
+        _GoalBtn(
+            value: 'lose',
+            color: AppColors.coral,
+            selected: selected,
+            onSelect: onSelect),
+        const SizedBox(height: 12),
+        _GoalBtn(
+            value: 'maintain',
+            color: AppColors.teal,
+            selected: selected,
+            onSelect: onSelect),
+        const SizedBox(height: 12),
+        _GoalBtn(
+            value: 'gain',
+            color: AppColors.primary,
+            selected: selected,
+            onSelect: onSelect),
+        if (showWarning) ...[
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.coral.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
+            ),
+            child: Column(children: [
+              const Icon(Icons.warning_amber_rounded, color: AppColors.coral, size: 28),
+              const SizedBox(height: 10),
+              Text(
+                'تنبيه صحي ⚠️',
+                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.coral, fontSize: 15),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'وزنك الحالي (BMI: ${bmi!.toStringAsFixed(1)}) تحت المعدل الطبيعي. لا ننصح بإنقاص الوزن في هذه المرحلة حرصاً على سلامتك.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 13, height: 1.5),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'ننصحك باختيار "الحفاظ على الوزن" أو "زيادة الوزن".',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.cairo(color: AppColors.coral, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ]),
+          ).animate().shake(duration: 500.ms).fadeIn(),
+        ],
+      ]),
+    );
+  }
 }
 
 class _GoalBtn extends StatelessWidget {
