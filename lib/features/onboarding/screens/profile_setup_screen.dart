@@ -511,21 +511,18 @@ class _GoalPage extends StatelessWidget {
             value: 'lose',
             color: AppColors.coral,
             selected: selected,
-            gender: gender,
             onSelect: onSelect),
         const SizedBox(height: 12),
         _GoalBtn(
             value: 'maintain',
             color: AppColors.teal,
             selected: selected,
-            gender: gender,
             onSelect: onSelect),
         const SizedBox(height: 12),
         _GoalBtn(
             value: 'gain',
             color: AppColors.primary,
             selected: selected,
-            gender: gender,
             onSelect: onSelect),
         if (showWarning) ...[
           const SizedBox(height: 20),
@@ -605,9 +602,8 @@ class _GoalBtn extends StatelessWidget {
       {required this.value,
       required this.color,
       required this.selected,
-      required this.gender,
       required this.onSelect});
-  final String value, selected, gender;
+  final String value, selected;
   final Color color;
   final ValueChanged<String> onSelect;
   @override
@@ -628,7 +624,7 @@ class _GoalBtn extends StatelessWidget {
         child: Row(children: [
           Text(GoalType.emoji(value), style: const TextStyle(fontSize: 22)),
           const SizedBox(width: 12),
-          Text(GoalType.label(value, gender),
+          Text(GoalType.label(value),
               style: GoogleFonts.cairo(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
