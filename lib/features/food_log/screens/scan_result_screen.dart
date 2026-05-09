@@ -35,6 +35,8 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   double _grams = 100.0;
   String _selectedMeal = MealType.breakfast;
 
+  File? _imageFile;
+
   @override
   void initState() {
     super.initState();
@@ -104,9 +106,14 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
         return;
       }
 
-      setState(() { _isScanning = true; _error = null; });
-
       final file = File(picked.path);
+
+      setState(() { 
+        _isScanning = true; 
+        _error = null; 
+        _imageFile = file;
+      });
+
       final label = await NutritionLabelService.scanImage(file);
 
       if (!mounted) return;
@@ -114,7 +121,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
       if (label == null || !label.isValid) {
         setState(() {
           _isScanning = false;
-          _error = 'لم نتمكن من قراءة القيمة الغذائية.\nتأكد من وضوح الصورة وأن الملصق ظاهر بالكامل.';
+          _error = 'لم نتمكن من قراءة القيمة الغذائية بدقة.\nتأكد من وضوح الصورة وأن الأرقام ظاهرة بشكل جيد.';
         });
         return;
       }
@@ -262,6 +269,50 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // ── معاينة الصورة المستخرجة ──
+        if (_imageFile != null)
+          Container(
+            height: 140,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.cardBorder, width: 1),
+              image: DecorationImage(
+                image: FileImage(_imageFile!),
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  bottom: 0, left: 0, right: 0,
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
+                        begin: Alignment.bottomCenter, end: Alignment.topCenter,
+                      ),
+                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 8, right: 12,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: AppColors.teal, size: 16),
+                      const SizedBox(width: 4),
+                      Text('تم استخراج القيم', style: GoogleFonts.cairo(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
         // ── اسم المنتج ──
         TextField(
           controller: _nameCtrl,

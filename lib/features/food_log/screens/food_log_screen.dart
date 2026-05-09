@@ -49,26 +49,12 @@ class FoodLogScreen extends StatelessWidget {
           ).animate().fadeIn(duration: 600.ms).moveX(begin: 30, end: 0, curve: Curves.easeOutQuad);
         },
       ),
-      floatingActionButton: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            heroTag: 'scan_fab',
-            onPressed: () => Navigator.push(context, MaterialPageRoute(
-              builder: (_) => NutritionScanScreen(mealType: initialMeal ?? MealType.breakfast),
-            )),
-            backgroundColor: AppColors.teal,
-            child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 22),
-          ),
-          const SizedBox(width: 12),
-          FloatingActionButton.extended(
-            heroTag: 'food_fab',
-            onPressed: () => showAddFoodSheet(context, initialMeal ?? MealType.breakfast),
-            backgroundColor: AppColors.primary,
-            icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-            label: Text('أضف طعام', style: GoogleFonts.cairo(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'food_fab',
+        onPressed: () => showAddFoodSheet(context, initialMeal ?? MealType.breakfast),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+        label: Text('أضف طعام', style: GoogleFonts.cairo(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -279,6 +265,41 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             child: Text(widget.existingEntry != null ? 'تعديل الطعام' : 'إضافة طعام',
                 style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           ),
+          if (widget.existingEntry == null) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => NutritionScanScreen(mealType: _selectedMeal)));
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [AppColors.teal, AppColors.primary.withValues(alpha: 0.8)]),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: AppColors.teal.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('مسح ملصق القيمة الغذائية', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text('صور الملصق وسنقرأ البيانات تلقائياً', style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70)),
+                    ])),
+                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+                  ]),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(children: [
+              const Expanded(child: Divider(color: AppColors.cardBorder, indent: 20, endIndent: 10)),
+              Text('أو إدخال يدوي', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textHint)),
+              const Expanded(child: Divider(color: AppColors.cardBorder, indent: 10, endIndent: 20)),
+            ]),
+          ],
           // Meal selector
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
