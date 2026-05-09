@@ -63,6 +63,7 @@ class NotificationService {
     await cancelWaterReminders();
 
     final schedule = profile.waterSchedule;
+    final isFemale = profile.gender == 'female';
 
     for (int i = 0; i < schedule.length; i++) {
       final item   = schedule[i];
@@ -84,7 +85,9 @@ class NotificationService {
         hour: hour,
         minute: minute,
         title: '💧 وقت الترطيب ($label)',
-        body: 'يا هلا، جا وقت ترطب جسمك وتشرب $amountStr.. جعلها بالعافية على قلبك! 🥤',
+        body: isFemale 
+          ? 'يا هلا، جا وقت ترطبين جسمك وتشربين $amountStr.. جعلها بالعافية على قلبك! 🥤'
+          : 'يا هلا، جا وقت ترطب جسمك وتشرب $amountStr.. جعلها بالعافية على قلبك! 🥤',
       );
     }
   }
@@ -149,9 +152,10 @@ class NotificationService {
   }
 
   /// Schedule calorie reminders (Breakfast, Lunch, Dinner)
-  Future<void> scheduleCalorieReminders() async {
+  Future<void> scheduleCalorieReminders(UserProfile? profile) async {
     if (kIsWeb) return;
     await cancelReminders();
+    final isFemale = profile?.gender == 'female';
 
     // Breakfast: 8:30 AM
     await _scheduleDailyNotification(
@@ -159,7 +163,9 @@ class NotificationService {
       hour: 8,
       minute: 30,
       title: '🍳 فطورك الصحي ينتظرك',
-      body: 'صباح الخير والجمال! سجل فطورك الحين وخلنا نبدأ يومنا بهمة عالية. ☀️',
+      body: isFemale 
+        ? 'صباح الخير والجمال! سجلي فطورك الحين وخلينا نبدأ يومنا بهمة عالية. ☀️'
+        : 'صباح الخير والجمال! سجل فطورك الحين وخلنا نبدأ يومنا بهمة عالية. ☀️',
       channelId: 'calorie_reminders',
       channelName: 'تذكير الوجبات',
     );
@@ -170,7 +176,9 @@ class NotificationService {
       hour: 13,
       minute: 30,
       title: '🥗 جا وقت الغداء',
-      body: 'عوافي على قلبك! لا تنسى تسجل غداك عشان تشوف وش باقي لك اليوم. 🍱',
+      body: isFemale 
+        ? 'عوافي على قلبك! لا تنسين تسجلين غداك عشان تشوفين وش باقي لك اليوم. 🍱'
+        : 'عوافي على قلبك! لا تنسى تسجل غداك عشان تشوف وش باقي لك اليوم. 🍱',
       channelId: 'calorie_reminders',
       channelName: 'تذكير الوجبات',
     );
@@ -181,7 +189,9 @@ class NotificationService {
       hour: 19,
       minute: 30,
       title: '🍽️ وجبة العشاء',
-      body: 'بالعافية مقدماً! سجل عشاك واختم يومك بأفضل نتيجة تفتخر فيها. ✨',
+      body: isFemale 
+        ? 'بالعافية مقدماً! سجلي عشاك واختمي يومك بأفضل نتيجة تفتخرين فيها. ✨'
+        : 'بالعافية مقدماً! سجل عشاك واختم يومك بأفضل نتيجة تفتخر فيها. ✨',
       channelId: 'calorie_reminders',
       channelName: 'تذكير الوجبات',
     );
@@ -193,7 +203,9 @@ class NotificationService {
       hour: 10,
       minute: 0,
       title: '⚖️ وش صار على الميزان؟',
-      body: 'صباح السبت الجميل، جا وقت تحديث وزنك عشان نشوف التقدم الرهيب اللي حققته! 💪',
+      body: isFemale 
+        ? 'صباح السبت الجميل، جا وقت تحديث وزنك عشان نشوف التقدم الرهيب اللي حققتيه! 💪'
+        : 'صباح السبت الجميل، جا وقت تحديث وزنك عشان نشوف التقدم الرهيب اللي حققته! 💪',
       channelId: 'weight_reminders',
       channelName: 'تذكير الوزن',
     );
@@ -244,7 +256,7 @@ class NotificationService {
   }
 
   /// Send a test notification after 5 seconds to verify background behavior
-  Future<void> showImmediateTestNotification() async {
+  Future<void> showImmediateTestNotification({bool isFemale = false}) async {
     if (kIsWeb) return;
     final scheduled = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
 
@@ -266,7 +278,9 @@ class NotificationService {
     await _plugin.zonedSchedule(
       id: 999,
       title: '🔔 تجربة التنبيهات',
-      body: 'أبشرك، التنبيهات شغالة زي اللوز حتى والتطبيق مقفل!',
+      body: isFemale 
+        ? 'أبشرك، التنبيهات شغالة زي اللوز حتى والتطبيق مقفل!' 
+        : 'أبشرك، التنبيهات شغالة زي اللوز حتى والتطبيق مقفل!',
       scheduledDate: scheduled,
       notificationDetails: const NotificationDetails(android: androidDetails, iOS: iosDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

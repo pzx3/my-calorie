@@ -15,7 +15,7 @@ class AppState extends ChangeNotifier {
     _loadAll();
     refreshDay(); // فحص تغير اليوم عند بدء التطبيق
     if (_profile != null) {
-      NotificationService().scheduleCalorieReminders();
+      NotificationService().scheduleCalorieReminders(_profile);
     }
   }
 
@@ -158,7 +158,7 @@ class AppState extends ChangeNotifier {
     await _saveProfile();
     // Schedule all reminders
     final notif = NotificationService();
-    await notif.scheduleCalorieReminders();
+    await notif.scheduleCalorieReminders(p);
     if (p.waterSetupComplete) {
       await notif.scheduleWaterReminders(p);
     }

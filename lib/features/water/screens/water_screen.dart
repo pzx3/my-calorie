@@ -104,7 +104,7 @@ class _WaterScreenState extends State<WaterScreen> {
                           ? Padding(
                               key: const ValueKey('water_done_screen_v2'),
                               padding: const EdgeInsets.only(top: 6),
-                              child: Text('قفلت احتياجك من الماء 💧',
+                              child: Text(state.profile?.gender == 'female' ? 'قفلتِ احتياجك من الماء 💧' : 'قفلت احتياجك من الماء 💧',
                                   style: GoogleFonts.cairo(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold)),
                             )
                           : const SizedBox.shrink(key: ValueKey('water_not_done_screen_v2')),
@@ -804,9 +804,10 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
             Center(
               child: TextButton.icon(
                 onPressed: () async {
-                  await NotificationService().showImmediateTestNotification();
+                  final isFemale = state.profile?.gender == 'female';
+                  await NotificationService().showImmediateTestNotification(isFemale: isFemale);
                   if (context.mounted) {
-                    AppNotifications.showTop(context, 'أبشر، بيجيك تنبيه تجريبي خلال 5 ثواني.. جرب تطلع من التطبيق الحين!', isError: false);
+                    AppNotifications.showTop(context, isFemale ? 'أبشري، بيجيك تنبيه تجريبي خلال 5 ثواني.. جربي تطلعين من التطبيق الحين!' : 'أبشر، بيجيك تنبيه تجريبي خلال 5 ثواني.. جرب تطلع من التطبيق الحين!', isError: false);
                   }
                 },
                 icon: const Icon(Icons.notifications_active_outlined, size: 18, color: AppColors.water),

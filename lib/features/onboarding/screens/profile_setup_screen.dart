@@ -219,10 +219,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                     _ActivityPage(
                         selected: _activity,
                         onSelect: (v) => setState(() => _activity = v)),
-                    _GoalPage(
-                        selected: _goal,
-                        bmi: _bmi,
-                        onSelect: (v) => setState(() => _goal = v)),
+                    _GoalPage(selected: _goal, bmi: _bmi, gender: _gender, onSelect: (v) => setState(() => _goal = v)),
                     _SchedulePage(
                         wakeHour: _wakeHour,
                         sleepHour: _sleepHour,
@@ -486,12 +483,13 @@ class _ActivityBtn extends StatelessWidget {
 }
 
 class _GoalPage extends StatelessWidget {
-  const _GoalPage({required this.selected, required this.bmi, required this.onSelect});
-  final String selected;
+  const _GoalPage({required this.selected, required this.bmi, required this.gender, required this.onSelect});
+  final String selected, gender;
   final double? bmi;
   final ValueChanged<String> onSelect;
   @override
   Widget build(BuildContext context) {
+    final isFemale = gender == 'female';
     final isUnderweight = bmi != null && bmi! < 18.5;
     final showWarning = selected == 'lose' && isUnderweight;
     final showTip = selected == 'maintain' && isUnderweight;
@@ -564,7 +562,9 @@ class _GoalPage extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'على الرغم من أنك تحت المعدل الطبيعي، إلا أن الحفاظ على وزنك الحالي خيار متاح إذا كنت مرتاحاً معه.',
+                  isFemale 
+                    ? 'على الرغم من أنكِ تحت المعدل الطبيعي، إلا أن الحفاظ على وزنك الحالي خيار متاح إذا كنتِ مرتاحةً معه.'
+                    : 'على الرغم من أنك تحت المعدل الطبيعي، إلا أن الحفاظ على وزنك الحالي خيار متاح إذا كنت مرتاحاً معه.',
                   style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 12, height: 1.5),
                 ),
               ),

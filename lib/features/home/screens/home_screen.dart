@@ -51,7 +51,7 @@ class HomeScreen extends StatelessWidget {
                                 children: [
                                   const AppLogo(size: 18, showShadow: false),
                                   const SizedBox(width: 6),
-                                  Text('مرحباً، ${profile?.name ?? 'صديقي'} 👋',
+                                  Text('مرحباً، ${profile?.name ?? (profile?.gender == 'female' ? 'صديقتي' : 'صديقي')} 👋',
                                       style: GoogleFonts.cairo(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -230,7 +230,7 @@ class _CalorieCardState extends State<_CalorieCard> {
                       ? Padding(
                           key: const ValueKey('cal_done_v2'),
                           padding: const EdgeInsets.only(bottom: 6),
-                          child: Text('قفلت سعراتك 🔥',
+                          child: Text(profile?.gender == 'female' ? 'قفلتِ سعراتك 🔥' : 'قفلت سعراتك 🔥',
                               style: GoogleFonts.cairo(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -410,7 +410,7 @@ class _WaterQuickCardState extends State<_WaterQuickCard> {
                   ? Padding(
                       key: const ValueKey('water_done_v2'),
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Text('قفلت احتياجك من الماء 💧',
+                      child: Text(profile?.gender == 'female' ? 'قفلتِ احتياجك من الماء 💧' : 'قفلت احتياجك من الماء 💧',
                           style: GoogleFonts.cairo(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -517,7 +517,7 @@ class _MealSection extends StatelessWidget {
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.add_circle_outline_rounded, size: 14, color: AppColors.textSecondary),
                   const SizedBox(width: 8),
-                  Text('سجل وجبة ${MealType.label(mealType)}', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
+                  Text(state.profile?.gender == 'female' ? 'سجلي وجبة ${MealType.label(mealType)}' : 'سجل وجبة ${MealType.label(mealType)}', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
                 ]),
               ),
             ),
@@ -603,7 +603,7 @@ class _WeightReminderBanner extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('حان وقت تسجيل وزنك! ⚖️', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-              Text('مر أسبوع منذ آخر تحديث، سجل وزنك الجديد الآن.', style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70)),
+              Text('مر أسبوع منذ آخر تحديث، ${profile?.gender == 'female' ? 'سجلي' : 'سجل'} وزنك الجديد الآن.', style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70)),
             ]),
           ),
           const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16),
