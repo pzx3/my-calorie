@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/utils/app_notifications.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/models/user_profile.dart';
 import '../../../core/utils/calorie_calculator.dart';
@@ -35,15 +36,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
     FocusScope.of(context).unfocus(); // Hide keyboard
     final error = _validatePage(_page);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error, style: GoogleFonts.cairo(color: Colors.white)),
-          backgroundColor: AppColors.coral,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      AppNotifications.showTop(context, error);
       return;
     }
 

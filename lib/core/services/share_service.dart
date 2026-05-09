@@ -6,8 +6,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
-import '../models/food_entry.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_notifications.dart';
 
 class ShareService {
   static final ScreenshotController screenshotController = ScreenshotController();
@@ -95,22 +95,13 @@ class ShareService {
       final result = await ImageGallerySaverPlus.saveImage(image, quality: 100, name: 'macros_${DateTime.now().millisecondsSinceEpoch}');
       if (context.mounted) {
         final success = result['isSuccess'] == true;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(success ? '✅ تم حفظ الصورة في المعرض' : '❌ فشل حفظ الصورة', style: GoogleFonts.cairo(color: Colors.white)),
-          backgroundColor: success ? AppColors.teal : AppColors.coral,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ));
+        AppNotifications.showTop(context, success ? 'تم حفظ الصورة في المعرض' : 'فشل حفظ الصورة', isError: !success);
       }
     } catch (e) {
       if (context.mounted) Navigator.pop(context);
       debugPrint('Error saving to gallery: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('❌ فشل حفظ الصورة', style: GoogleFonts.cairo(color: Colors.white)),
-          backgroundColor: AppColors.coral,
-          behavior: SnackBarBehavior.floating,
-        ));
+        AppNotifications.showTop(context, 'فشل حفظ الصورة');
       }
     }
   }

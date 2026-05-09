@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/food_entry.dart';
+import '../../../core/utils/app_notifications.dart';
 
 /// شاشة إدخال القيمة الغذائية يدوياً
 class NutritionScanScreen extends StatefulWidget {
@@ -88,8 +89,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   void _addToLog() {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('أدخل اسم المنتج')));
+      AppNotifications.showTop(context, 'أدخل اسم المنتج');
       return;
     }
 

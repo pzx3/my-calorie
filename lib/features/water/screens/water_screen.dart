@@ -9,6 +9,7 @@ import '../../../core/models/user_profile.dart';
 import '../../../core/models/water_entry.dart';
 import '../../../core/utils/validator.dart';
 import '../../../core/services/notification_service.dart';
+import '../../../core/utils/app_notifications.dart';
 import '../../../shared/widgets/app_logo.dart';
 
 class WaterScreen extends StatefulWidget {
@@ -805,12 +806,7 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
                 onPressed: () async {
                   await NotificationService().showImmediateTestNotification();
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('أبشر، بيجيك تنبيه تجريبي خلال 5 ثواني.. جرب تطلع من التطبيق الحين!', style: GoogleFonts.cairo()),
-                        backgroundColor: AppColors.water,
-                      ),
-                    );
+                    AppNotifications.showTop(context, 'أبشر، بيجيك تنبيه تجريبي خلال 5 ثواني.. جرب تطلع من التطبيق الحين!', isError: false);
                   }
                 },
                 icon: const Icon(Icons.notifications_active_outlined, size: 18, color: AppColors.water),
