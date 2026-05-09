@@ -492,7 +492,9 @@ class _GoalPage extends StatelessWidget {
   final ValueChanged<String> onSelect;
   @override
   Widget build(BuildContext context) {
-    final showWarning = selected == 'lose' && bmi != null && bmi! < 18.5;
+    final isUnderweight = bmi != null && bmi! < 18.5;
+    final showWarning = selected == 'lose' && isUnderweight;
+    final showTip = selected == 'maintain' && isUnderweight;
 
     return _SetupPage(
       emoji: '🎯',
@@ -538,7 +540,6 @@ class _GoalPage extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 13, height: 1.5),
               ),
-              const SizedBox(height: 8),
               Text(
                 'ننصحك باختيار "الحفاظ على الوزن" أو "زيادة الوزن".',
                 textAlign: TextAlign.center,
@@ -546,6 +547,27 @@ class _GoalPage extends StatelessWidget {
               ),
             ]),
           ).animate().shake(duration: 500.ms).fadeIn(),
+        ],
+        if (showTip) ...[
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.teal.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.teal.withValues(alpha: 0.3)),
+            ),
+            child: Row(children: [
+              const Icon(Icons.info_outline_rounded, color: AppColors.teal, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'على الرغم من أنك تحت المعدل الطبيعي، إلا أن الحفاظ على وزنك الحالي خيار متاح إذا كنت تشعر بالراحة معه. ننصحك مستقبلاً بزيادة بسيطة لتحسين مستويات الطاقة.',
+                  style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 12, height: 1.5),
+                ),
+              ),
+            ]),
+          ).animate().fadeIn(duration: 600.ms),
         ],
       ]),
     );
