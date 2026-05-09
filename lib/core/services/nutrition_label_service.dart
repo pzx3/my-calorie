@@ -44,6 +44,8 @@ class NutritionLabel {
 
 /// خدمة مسح وتحليل ملصقات القيمة الغذائية
 class NutritionLabelService {
+  // ملاحظة: ML Kit يدعم حالياً اللاتينية والصينية والديفاناغاري واليابانية والكورية برمجياً
+  // نستخدم المحرك اللاتيني ونعتمد على قوة معالجة النصوص (Logic) لاستخراج البيانات من الملصقات المزدوجة
   static final _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
 
   /// مسح صورة واستخراج بيانات القيمة الغذائية
@@ -66,10 +68,19 @@ class NutritionLabelService {
 
   /// تحليل النص المستخرج واستخراج القيم الغذائية
   static NutritionLabel? _parseNutritionText(String text) {
-    // تنظيف النص الأساسي لتسهيل البحث
-    String cleanText = text.replaceAll(RegExp(r'[,،]'), '.').toLowerCase();
+    // 1. تنظيف النص وتحويله لحروف صغيرة
+    String cleanText = text.toLowerCase();
 
-    // تحويل الأرقام العربية إلى إنجليزية
+    // 2. معالجة الأخطاء الشائعة في الـ OCR (مثل حرف O بدلاً من الصفر 0)
+    // نقوم باستبدالها فقط إذا كانت محاطة بأرقام أو نقاط
+    cleanText = cleanText.replaceAllMapped(RegExp(r'(\d)[oO](\d)'), (m) => '${m[1]}0${m[2]}');
+    cleanText = cleanText.replaceAllMapped(RegExp(r'(\d)[oO]'), (m) => '${m[1]}0');
+    cleanText = cleanText.replaceAllMapped(RegExp(r'[oO](\d)'), (m) => '0${m[1]}');
+
+    // 3. توحيد الفواصل العشرية
+    cleanText = cleanText.replaceAll(RegExp(r'[,،]'), '.');
+
+    // 4. تحويل الأرقام العربية إلى إنجليزية
     const arabicToEnglish = {
       '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
       '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
@@ -78,53 +89,36 @@ class NutritionLabelService {
       cleanText = cleanText.replaceAll(key, value);
     });
 
-    // استخراج القيم باستخدام تعبيرات مرنة
-    final calories = _extractValue(cleanText, [
-      r'(?:calories?|energy|سعرات|سعره|سعر|طاقة|الطاقة|سعر حراري|كالوري|cal|kcal)[^0-9\n]*(\d+\.?\d*)',
-      r'(\d+\.?\d*)\s*(?:kcal|cal|سعر حراري|كالوري|سعر)',
+    // 5. استخراج القيم (استراتيجية الخبير: البحث عن الكلمة المفتاحية ثم أقرب رقم بعدها)
+    final calories = _expertExtract(cleanText, [
+      'calories', 'energy', 'سعرات', 'طاقة', 'الطاقة', 'سعر حراري', 'كالوري', 'kcal'
     ]);
 
-    final protein = _extractValue(cleanText, [
-      r'(?:protein|بروتين|بروتينات|prote[ií]n)[^0-9\n]*(\d+\.?\d*)',
-      r'(\d+\.?\d*)\s*(?:g|جم|جرام|غ|غرام|غ\s*/\s*غ)[^0-9\n]*(?:protein|بروتين)',
-      r'(\d+\.?\d*)\s*protein',
+    final protein = _expertExtract(cleanText, [
+      'protein', 'بروتين', 'بروتينات', 'prote'
     ]);
 
-    final carbs = _extractValue(cleanText, [
-      r'(?:carbohydrates?|carbs?|كربوهيدرات|الكربوهيدرات الكلية|كارب|نشويات|total\s*carb|سكريات كلي)[^0-9\n]*(\d+\.?\d*)',
-      r'(\d+\.?\d*)\s*(?:g|جم|جرام|غ|غرام|غ\s*/\s*غ)[^0-9\n]*(?:carb|كربوهيدرات|كارب)',
-      r'(\d+\.?\d*)\s*total\s*carb',
+    final carbs = _expertExtract(cleanText, [
+      'carbohydrate', 'كربوهيدرات', 'كارب', 'نشويات', 'carb', 'سكريات كلي'
     ]);
 
-    final fat = _extractValue(cleanText, [
-      r'(?:total\s*fat|fat|دهون|الدهون الكلية|مجموع الدهون|الدسم الكلي|دهن|دسم|lipid)[^0-9\n]*(\d+\.?\d*)',
-      r'(\d+\.?\d*)\s*(?:g|جم|جرام|غ|غرام|غ\s*/\s*غ)[^0-9\n]*(?:fat|دهون|دسم)',
-      r'(\d+\.?\d*)\s*total\s*fat',
+    final fat = _expertExtract(cleanText, [
+      'fat', 'دهون', 'الدسم', 'مجموع الدهون', 'دسم', 'lipid'
     ]);
 
-    final fiber = _extractValue(cleanText, [
-      r'(?:fiber|fibre|ألياف|الياف|الألياف الغذائية)[^0-9\n]*(\d+\.?\d*)',
-    ]);
-
-    final sugar = _extractValue(cleanText, [
-      r'(?:sugar|سكر|سكريات|سكر كلي|سكريات كلية)[^0-9\n]*(\d+\.?\d*)',
-    ]);
-
-    final sodium = _extractValue(cleanText, [
-      r'(?:sodium|صوديوم|ملح|صوديم)[^0-9\n]*(\d+\.?\d*)',
-    ]);
+    final fiber = _expertExtract(cleanText, ['fiber', 'fibre', 'ألياف', 'الياف']);
+    final sugar = _expertExtract(cleanText, ['sugar', 'سكر', 'سكريات']);
+    final sodium = _expertExtract(cleanText, ['sodium', 'صوديوم', 'ملح', 'صوديم']);
 
     // حجم الحصة
-    final servingSize = _extractValue(cleanText, [
-      r'(?:serving\s*size|حجم الحصة|الحصة|لكل حصة|per\s*serving)[^0-9\n]*.*?(\d+\.?\d*)\s*(?:g|جم|مل|ml|غ|غرام)',
-      r'(?:per|لكل)[^0-9\n]*(\d+\.?\d*)\s*(?:g|جم|غ|غرام)',
-      r'(\d+\.?\d*)\s*(?:g|جم|غ|غرام)[^0-9\n]*serving',
-    ]);
+    final servingSize = _expertExtract(cleanText, [
+      'serving size', 'حجم الحصة', 'الحصة', 'per serving', 'size'
+    ], isServing: true);
 
     // اكتشاف إذا كانت القيم لكل حصة وليس لكل 100 جم
     double factor = 1.0;
     if (servingSize != null && servingSize > 0 && servingSize != 100) {
-      final hasPerServing = RegExp(r'per\s*serving|لكل حصة|per\s*portion', caseSensitive: false).hasMatch(cleanText);
+      final hasPerServing = RegExp(r'per\s*serving|لكل حصة|per\s*portion|amount\s*per', caseSensitive: false).hasMatch(cleanText);
       final hasPer100 = RegExp(r'per\s*100|لكل 100', caseSensitive: false).hasMatch(cleanText);
 
       if (hasPerServing && !hasPer100) {
@@ -150,27 +144,31 @@ class NutritionLabelService {
     );
   }
 
-  /// استخراج قيمة رقمية من النص باستخدام أنماط Regex متعددة
-  static double? _extractValue(String text, List<String> patterns) {
-    // 1. محاولة البحث في نفس السطر أولاً
-    for (final pattern in patterns) {
-      final match = RegExp(pattern, caseSensitive: false).firstMatch(text);
-      if (match != null && match.groupCount >= 1) {
-        final value = double.tryParse(match.group(1)!);
-        if (value != null && value >= 0) return value;
+  /// استراتيجية الخبير لاستخراج القيمة:
+  /// تبحث عن الكلمة المفتاحية، ثم تبحث عن أول رقم يظهر بعدها في نطاق معين
+  static double? _expertExtract(String text, List<String> keywords, {bool isServing = false}) {
+    for (final keyword in keywords) {
+      final index = text.indexOf(keyword.toLowerCase());
+      if (index == -1) continue;
+
+      // نبحث في الـ 40 حرفاً التالية للكلمة المفتاحية
+      final searchArea = text.substring(index + keyword.length, 
+          (index + keyword.length + 40).clamp(0, text.length));
+      
+      // تعبير نمطي للبحث عن رقم (يدعم الفواصل العشرية)
+      // إذا كنا نبحث عن حجم حصة، نهتم بالأرقام المتبوعة بـ g أو ml
+      if (isServing) {
+        final servingMatch = RegExp(r'(\d+\.?\d*)\s*(?:g|جم|مل|ml|غ|غرام)').firstMatch(searchArea);
+        if (servingMatch != null) return double.tryParse(servingMatch.group(1)!);
+      }
+
+      final numMatch = RegExp(r'(\d+\.?\d*)').firstMatch(searchArea);
+      if (numMatch != null) {
+        final val = double.tryParse(numMatch.group(1)!);
+        // نتجاهل الأرقام الصغيرة جداً (مثل 0.1) في السعرات إذا وجدنا رقماً أكبر
+        if (val != null) return val;
       }
     }
-    
-    // 2. محاولة البحث في الأسطر المجاورة (عن طريق السماح بتخطي مسافات أكثر أو أسطر جديدة)
-    for (final pattern in patterns) {
-      final crossLinePattern = pattern.replaceAll(r'[^0-9\n]*', r'[^0-9]{0,15}');
-      final match = RegExp(crossLinePattern, caseSensitive: false).firstMatch(text);
-      if (match != null && match.groupCount >= 1) {
-        final value = double.tryParse(match.group(1)!);
-        if (value != null && value >= 0) return value;
-      }
-    }
-    
     return null;
   }
 
