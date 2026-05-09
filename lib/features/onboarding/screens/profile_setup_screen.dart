@@ -269,7 +269,7 @@ class _NamePage extends StatelessWidget {
   final TextEditingController ctrl;
   @override
   Widget build(BuildContext context) => _SetupPage(
-        emoji: '👋',
+        emoji: '✨',
         title: 'وش اسمك؟',
         subtitle: '',
         child: TextField(
@@ -294,7 +294,7 @@ class _AgePage extends StatelessWidget {
   final ValueChanged<String> onGender;
   @override
   Widget build(BuildContext context) => _SetupPage(
-        emoji: '📋',
+        emoji: '🧬',
         title: 'العمر والجنس',
         subtitle: 'لحساب معدل الأيض الأساسي بدقة',
         child: Column(children: [
@@ -313,14 +313,14 @@ class _AgePage extends StatelessWidget {
           Row(children: [
             Expanded(
                 child: _GenderBtn(
-                    label: 'ذكر 👨',
+                    label: 'ذكر 🙋‍♂️',
                     value: 'male',
                     selected: gender,
                     onTap: onGender)),
             const SizedBox(width: 12),
             Expanded(
                 child: _GenderBtn(
-                    label: 'أنثى 👩',
+                    label: 'أنثى 🙋‍♀️',
                     value: 'female',
                     selected: gender,
                     onTap: onGender)),
@@ -369,7 +369,7 @@ class _MeasurePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SetupPage(
-      emoji: '📏',
+      emoji: '📐',
       title: 'الطول والوزن',
       subtitle: 'بالسنتيمتر والكيلوجرام',
       child: Column(children: [
@@ -604,14 +604,14 @@ class _SchedulePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _SetupPage(
-    emoji: '⏰',
+    emoji: '⌛',
     title: 'مواعيدك اليومية',
     subtitle: 'لتوزيع شرب الماء بذكاء على مدار يومك',
     child: Column(children: [
       Row(children: [
         Expanded(child: _TimeCard(
           label: 'وقت الاستيقاظ',
-          emoji: '🌅',
+          emoji: '☀️',
           hour: wakeHour,
           context: context,
           onChanged: onWakeChanged,
@@ -619,7 +619,7 @@ class _SchedulePage extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(child: _TimeCard(
           label: 'وقت النوم',
-          emoji: '🌙',
+          emoji: '🌌',
           hour: sleepHour,
           context: context,
           onChanged: onSleepChanged,
