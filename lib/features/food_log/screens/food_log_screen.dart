@@ -252,110 +252,116 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.75, maxChildSize: 0.95, minChildSize: 0.5,
-      builder: (ctx, ctrl) => Container(
-        decoration: const BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-        child: Column(children: [
-          const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.cardBorder, borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(widget.existingEntry != null ? 'تعديل الطعام' : 'إضافة طعام',
-                style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          ),
-          if (widget.existingEntry == null) ...[
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.cardBorder, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => NutritionScanScreen(mealType: _selectedMeal)));
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.teal, AppColors.primary.withValues(alpha: 0.8)]),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: AppColors.teal.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
-                  ),
-                  child: Row(children: [
-                    const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 24),
-                    const SizedBox(width: 12),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('مسح ملصق القيمة الغذائية', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-                      Text('صور الملصق وسنقرأ البيانات تلقائياً', style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70)),
-                    ])),
-                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
-                  ]),
-                ),
-              ),
+              child: Text(widget.existingEntry != null ? 'تعديل الطعام' : 'إضافة طعام',
+                  style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             ),
-            const SizedBox(height: 12),
-            Row(children: [
-              const Expanded(child: Divider(color: AppColors.cardBorder, indent: 20, endIndent: 10)),
-              Text('أو إدخال يدوي', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textHint)),
-              const Expanded(child: Divider(color: AppColors.cardBorder, indent: 10, endIndent: 20)),
-            ]),
-          ],
-          // Meal selector
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: MealType.all.map((m) => Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedMeal = m),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: _selectedMeal == m ? AppColors.primary : AppColors.card,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _selectedMeal == m ? AppColors.primary : AppColors.cardBorder),
+            // نستخدم Flexible بدلاً من Expanded للسماح للقائمة بالتقلص مع الكيبورد
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.existingEntry == null) ...[
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => NutritionScanScreen(mealType: _selectedMeal)));
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: [AppColors.teal, AppColors.primary.withValues(alpha: 0.8)]),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: AppColors.teal.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                          ),
+                          child: Row(children: [
+                            const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text('مسح ملصق القيمة الغذائية', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                              Text('صور الملصق وسنقرأ البيانات تلقائياً', style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70)),
+                            ])),
+                            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+                          ]),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(children: [
+                        const Expanded(child: Divider(color: AppColors.cardBorder, indent: 0, endIndent: 10)),
+                        Text('أو إدخال يدوي', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textHint)),
+                        const Expanded(child: Divider(color: AppColors.cardBorder, indent: 10, endIndent: 0)),
+                      ]),
+                    ],
+                    const SizedBox(height: 12),
+                    // Meal selector
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(children: MealType.all.map((m) => Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedMeal = m),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: _selectedMeal == m ? AppColors.primary : AppColors.card,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: _selectedMeal == m ? AppColors.primary : AppColors.cardBorder),
+                            ),
+                            child: Text('${MealType.emoji(m)} ${MealType.label(m)}',
+                                style: GoogleFonts.cairo(fontSize: 13, color: _selectedMeal == m ? Colors.white : AppColors.textSecondary)),
+                          ),
+                        ),
+                      )).toList()),
                     ),
-                    child: Text('${MealType.emoji(m)} ${MealType.label(m)}',
-                        style: GoogleFonts.cairo(fontSize: 13, color: _selectedMeal == m ? Colors.white : AppColors.textSecondary)),
-                  ),
+                    const SizedBox(height: 20),
+                    // Manual entry fields
+                    _Field(ctrl: _nameCtrl, label: 'اسم الطعام *', hint: 'مثل: دجاج مشوي', icon: Icons.restaurant_rounded, errorText: _nameError),
+                    const SizedBox(height: 14),
+                    _Field(ctrl: _calCtrl, label: 'السعرات الحرارية *', hint: '0', numeric: true, icon: Icons.local_fire_department_rounded, errorText: _calError),
+                    const SizedBox(height: 14),
+                    Row(children: [
+                      Expanded(child: _Field(ctrl: _proCtrl, label: 'بروتين (جم)', hint: '0', numeric: true)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _Field(ctrl: _carbCtrl, label: 'كارب (جم)', hint: '0', numeric: true)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _Field(ctrl: _fatCtrl, label: 'دهون (جم)', hint: '0', numeric: true)),
+                    ]),
+                    const SizedBox(height: 20),
+                  ],
                 ),
-              )).toList()),
-            ),
-          ),
-          // Manual entry fields
-          Expanded(
-            child: SingleChildScrollView(
-              controller: ctrl,
-              padding: const EdgeInsets.all(20),
-              child: Column(children: [
-                _Field(ctrl: _nameCtrl, label: 'اسم الطعام *', hint: 'مثل: دجاج مشوي', icon: Icons.restaurant_rounded, errorText: _nameError),
-                const SizedBox(height: 14),
-                _Field(ctrl: _calCtrl, label: 'السعرات الحرارية *', hint: '0', numeric: true, icon: Icons.local_fire_department_rounded, errorText: _calError),
-                const SizedBox(height: 14),
-                Row(children: [
-                  Expanded(child: _Field(ctrl: _proCtrl, label: 'بروتين (جم)', hint: '0', numeric: true)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _Field(ctrl: _carbCtrl, label: 'كارب (جم)', hint: '0', numeric: true)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _Field(ctrl: _fatCtrl, label: 'دهون (جم)', hint: '0', numeric: true)),
-                ]),
-              ]),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(20, 8, 20, MediaQuery.of(context).viewInsets.bottom + 16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _add(context),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                child: Text(widget.existingEntry != null ? 'حفظ التعديلات' : 'إضافة إلى اليوم', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
               ),
             ),
-          ),
-        ]),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _add(context),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                  child: Text(widget.existingEntry != null ? 'حفظ التعديلات' : 'إضافة إلى اليوم', style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
