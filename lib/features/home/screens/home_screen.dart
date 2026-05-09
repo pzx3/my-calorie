@@ -51,7 +51,7 @@ class HomeScreen extends StatelessWidget {
                                 children: [
                                   const AppLogo(size: 18, showShadow: false),
                                   const SizedBox(width: 6),
-                                  Text('مرحباً، ${profile?.name ?? (profile?.gender == 'female' ? 'صديقتي' : 'صديقي')} 👋',
+                                  Text('مرحباً${profile?.name != null ? '، ${profile.name}' : ''} 👋',
                                       style: GoogleFonts.cairo(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -90,7 +90,10 @@ class HomeScreen extends StatelessWidget {
                   child: Column(children: [
                     // ── Weight Reminder Banner ──
                     if (state.shouldPromptWeight) ...[
-                      _WeightReminderBanner(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightHistoryScreen()))),
+                      _WeightReminderBanner(
+                        profile: state.profile,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightHistoryScreen())),
+                      ),
                       const SizedBox(height: 16),
                     ],
                     // ── Calorie Ring Card ──
@@ -230,7 +233,7 @@ class _CalorieCardState extends State<_CalorieCard> {
                       ? Padding(
                           key: const ValueKey('cal_done_v2'),
                           padding: const EdgeInsets.only(bottom: 6),
-                          child: Text(profile?.gender == 'female' ? 'قفلتِ سعراتك 🔥' : 'قفلت سعراتك 🔥',
+                          child: Text(widget.state.profile?.gender == 'female' ? 'قفلتِ سعراتك 🔥' : 'قفلت سعراتك 🔥',
                               style: GoogleFonts.cairo(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -582,8 +585,9 @@ class _FoodTile extends StatelessWidget {
 }
 
 class _WeightReminderBanner extends StatelessWidget {
-  const _WeightReminderBanner({required this.onTap});
+  const _WeightReminderBanner({required this.onTap, this.profile});
   final VoidCallback onTap;
+  final UserProfile? profile;
 
   @override
   Widget build(BuildContext context) {

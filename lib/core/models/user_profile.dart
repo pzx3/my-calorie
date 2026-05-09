@@ -42,11 +42,14 @@ class GoalType {
   static const String maintain = 'maintain';
   static const String gain     = 'gain';
 
-  static String label(String v) => const {
-    'lose':     'إنقاص الوزن',
-    'maintain': 'الحفاظ على الوزن',
-    'gain':     'زيادة الوزن وبناء العضلات',
-  }[v] ?? 'الحفاظ على الوزن';
+  static String label(String v, String gender) {
+    final isFemale = gender == 'female';
+    return {
+      'lose':     'إنقاص الوزن',
+      'maintain': 'الحفاظ على الوزن',
+      'gain':     isFemale ? 'زيادة الوزن وشد الجسم' : 'زيادة الوزن وبناء العضلات',
+    }[v] ?? 'الحفاظ على الوزن';
+  }
 
   static int adjustment(String v) =>
       const {'lose': -500, 'maintain': 0, 'gain': 300}[v] ?? 0;

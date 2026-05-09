@@ -238,7 +238,7 @@ class _AvatarCard extends StatelessWidget {
               decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6)),
-              child: Text(GoalType.label(profile.goal),
+              child: Text(GoalType.label(profile.goal, profile.gender),
                   style: GoogleFonts.cairo(
                       fontSize: 10,
                       color: Colors.white,
