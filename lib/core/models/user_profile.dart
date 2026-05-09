@@ -45,7 +45,7 @@ class GoalType {
   static String label(String v) => const {
     'lose':     'إنقاص الوزن',
     'maintain': 'الحفاظ على الوزن',
-    'gain':     'بناء العضلات',
+    'gain':     'زيادة الوزن وبناء العضلات',
   }[v] ?? 'الحفاظ على الوزن';
 
   static int adjustment(String v) =>

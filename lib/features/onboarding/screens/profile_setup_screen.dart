@@ -48,11 +48,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
     }
 
     if (_page < _totalPages - 1) {
-      // Smart Auto-Goal Selection
+      // Smart Auto-Goal Selection (Best for User)
       if (_page == 2) {
         final bmi = _bmi;
-        if (bmi != null && bmi < 18.5) {
-          _goal = 'gain';
+        if (bmi != null) {
+          if (bmi < 18.5) {
+            _goal = 'gain';
+          } else if (bmi >= 25.0) {
+            _goal = 'lose';
+          } else {
+            _goal = 'maintain';
+          }
         }
       }
 
