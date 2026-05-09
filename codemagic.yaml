@@ -1,0 +1,25 @@
+workflows:
+  ios-workflow:
+    name: iOS Build Workflow
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Re-initialize iOS project
+        script: |
+          # Step 1: Remove existing Podfile (as requested to reset configuration)
+          rm -f ios/Podfile
+          # Step 2: Regenerate the platform files (to restore Podfile with latest Flutter template)
+          flutter create . --platforms=ios
+          # Step 3: Upgrade and get dependencies
+          flutter pub upgrade
+          flutter pub get
+          # Step 4: Clean and Build
+          flutter clean
+          flutter build ios --no-codesign
+    artifacts:
+      - build/ios/iphoneos/*.app
+      - /tmp/xcodebuild_logs/*.log
