@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
+import '../models/food_entry.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_notifications.dart';
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -13,7 +14,7 @@ class NotificationService {
 
   /// Initialize notification plugin
   Future<void> init() async {
-    if (_initialized) return;
+    if (_initialized || kIsWeb) return;
 
     tz_data.initializeTimeZones();
 
@@ -35,6 +36,7 @@ class NotificationService {
 
   /// Request notification permissions (iOS/Android 13+)
   Future<bool> requestPermission() async {
+    if (kIsWeb) return false;
     // Android
     final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
@@ -56,6 +58,7 @@ class NotificationService {
 
   /// Schedule water reminders based on profile settings
   Future<void> scheduleWaterReminders(UserProfile profile, {bool isOz = false}) async {
+    if (kIsWeb) return;
     // Cancel all existing water reminders first
     await cancelWaterReminders();
 
@@ -139,6 +142,7 @@ class NotificationService {
 
   /// Cancel all water reminder notifications
   Future<void> cancelWaterReminders() async {
+    if (kIsWeb) return;
     for (int i = 0; i < 20; i++) {
       await _plugin.cancel(id: 100 + i);
     }
@@ -146,6 +150,7 @@ class NotificationService {
 
   /// Schedule calorie reminders (Breakfast, Lunch, Dinner)
   Future<void> scheduleCalorieReminders() async {
+    if (kIsWeb) return;
     await cancelReminders();
 
     // Breakfast: 8:30 AM
@@ -196,6 +201,7 @@ class NotificationService {
 
   /// Cancel calorie and weight reminders
   Future<void> cancelReminders() async {
+    if (kIsWeb) return;
     await _plugin.cancel(id: 200);
     await _plugin.cancel(id: 201);
     await _plugin.cancel(id: 202);
@@ -239,6 +245,7 @@ class NotificationService {
 
   /// Send a test notification after 5 seconds to verify background behavior
   Future<void> showImmediateTestNotification() async {
+    if (kIsWeb) return;
     final scheduled = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
 
     const androidDetails = AndroidNotificationDetails(
@@ -268,6 +275,7 @@ class NotificationService {
 
   /// Cancel all notifications
   Future<void> cancelAll() async {
+    if (kIsWeb) return;
     await _plugin.cancelAll();
   }
 }

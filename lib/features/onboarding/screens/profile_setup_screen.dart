@@ -32,6 +32,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
   int _wakeHour = 7;
   int _sleepHour = 22;
 
+  double? get _bmi {
+    final w = double.tryParse(_weightCtrl.text);
+    final h = double.tryParse(_heightCtrl.text);
+    if (w == null || h == null || h == 0) return null;
+    return w / ((h / 100) * (h / 100));
+  }
+
   void _next() {
     FocusScope.of(context).unfocus(); // Hide keyboard
     final error = _validatePage(_page);
@@ -62,6 +69,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
         final hErr = Validator.height(_heightCtrl.text);
         if (hErr != null) return hErr;
         return Validator.weight(_weightCtrl.text);
+      case 4:
+        final bmi = _bmi;
+        if (_goal == 'lose' && bmi != null && bmi < 18.5) {
+          return 'وزنك الحالي تحت المعدل الطبيعي (نحافة). لا ننصح بإنقاص الوزن في هذه المرحلة، وننصحك باختيار هدف "الحفاظ على الوزن" أو "زيادة الوزن".';
+        }
+        return null;
       default:
         return null;
     }
