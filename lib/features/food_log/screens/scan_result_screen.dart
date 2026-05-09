@@ -24,36 +24,51 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
   bool _isScanning = false;
   NutritionLabel? _label;
   String? _error;
-
-  // حقول قابلة للتعديل
   final _nameCtrl = TextEditingController(text: 'منتج غذائي');
-  final _gramsCtrl = TextEditingController(text: '100');
+  final _calCtrl = TextEditingController();
+  final _proCtrl = TextEditingController();
+  final _carbCtrl = TextEditingController();
+  final _fatCtrl = TextEditingController();
+  
+  // الدهون المفصلة
+  final _satFatCtrl = TextEditingController();
+  final _transFatCtrl = TextEditingController();
+  
+  // الكربوهيدرات المفصلة
+  final _fiberCtrl = TextEditingController();
+  final _sugarCtrl = TextEditingController();
+  final _addedSugarCtrl = TextEditingController();
+  
+  // المعادن والفيتامينات
+  final _sodiumCtrl = TextEditingController();
+  final _cholesterolCtrl = TextEditingController();
+  final _vitDCtrl = TextEditingController();
+  final _calciumCtrl = TextEditingController();
+  final _ironCtrl = TextEditingController();
+  final _potassiumCtrl = TextEditingController();
 
-  double _grams = 100.0;
+  final _gramsCtrl = TextEditingController(text: '1'); // عدد الحصص
+  final _unitWeightCtrl = TextEditingController(text: '100'); // وزن الحصة الواحدة بالجرام
+
+  String _selectedUnit = 'جم';
   String _selectedMeal = MealType.breakfast;
   File? _imageFile;
+
+  final List<String> _units = ['جم', 'مل', 'قطعة', 'كوب', 'ملعقة', 'عبوة', 'حصة'];
 
   @override
   void initState() {
     super.initState();
     _selectedMeal = widget.mealType;
-    _gramsCtrl.addListener(_onGramsChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _startScan());
-  }
-
-  void _onGramsChanged() {
-    final val = double.tryParse(_gramsCtrl.text) ?? 0;
-    if (val != _grams) {
-      setState(() {
-        _grams = val;
-      });
-    }
   }
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _gramsCtrl.dispose();
+    _nameCtrl.dispose(); _calCtrl.dispose(); _proCtrl.dispose(); _carbCtrl.dispose(); _fatCtrl.dispose();
+    _satFatCtrl.dispose(); _transFatCtrl.dispose(); _fiberCtrl.dispose(); _sugarCtrl.dispose(); _addedSugarCtrl.dispose();
+    _sodiumCtrl.dispose(); _cholesterolCtrl.dispose(); _vitDCtrl.dispose(); _calciumCtrl.dispose(); _ironCtrl.dispose(); _potassiumCtrl.dispose();
+    _gramsCtrl.dispose(); _unitWeightCtrl.dispose();
     super.dispose();
   }
 
@@ -67,7 +82,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.cardBorder, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 24),
-          Text('اختيار صورة الملصق', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Text('تصوير الملصق للمعالجة', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 20),
           _SourceOption(
             icon: Icons.camera_alt_rounded,
@@ -105,60 +120,63 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
       }
       final file = File(picked.path);
       setState(() { _isScanning = true; _error = null; _imageFile = file; });
+      
+      // نقوم بالمسح لكن لا نعبئ البيانات آلياً بناءً على طلب المستخدم
       final label = await NutritionLabelService.scanImage(file);
+      
       if (!mounted) return;
-      if (label == null || !label.isValid) {
-        setState(() {
-          _isScanning = false;
-          _error = 'لم نتمكن من قراءة القيمة الغذائية بدقة.\nتأكد من وضوح الصورة وأن الأرقام ظاهرة بشكل جيد.';
-        });
-        return;
-      }
       setState(() {
         _isScanning = false;
-        _label = label;
-        if (label.servingSizeG != null && label.servingSizeG! > 0) {
-          _grams = label.servingSizeG!;
-        } else {
-          _grams = 100.0;
-        }
-        _gramsCtrl.text = _grams.round().toString();
+        _label = label ?? NutritionLabel(caloriesPer100g: 0, proteinPer100g: 0, carbsPer100g: 0, fatPer100g: 0, rawText: '');
       });
     } catch (e) {
-      if (mounted) setState(() { _isScanning = false; _error = 'حصل خطأ أثناء المسح.'; });
+      if (mounted) setState(() { _isScanning = false; _error = 'حصل خطأ أثناء المعالجة.'; });
     }
   }
 
-  Map<String, double> get _actualValues {
-    if (_label == null) return {'calories': 0, 'protein': 0, 'carbs': 0, 'fat': 0};
-    final factor = _grams / 100.0;
-    return {
-      'calories': _label!.caloriesPer100g * factor,
-      'protein': _label!.proteinPer100g * factor,
-      'carbs': _label!.carbsPer100g * factor,
-      'fat': _label!.fatPer100g * factor,
-    };
-  }
-
   void _addToLog() {
-    final vals = _actualValues;
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('أدخل اسم المنتج')));
       return;
     }
+
+    final count = double.tryParse(_gramsCtrl.text) ?? 1.0;
+    final unitWeight = double.tryParse(_unitWeightCtrl.text) ?? 100.0;
+    final totalGrams = _selectedUnit == 'جم' || _selectedUnit == 'مل' ? count : count * unitWeight;
+
+    // القيم المدخلة (نفترض أنها لكل 100 جرام لتسهيل الحساب)
+    final cal100 = double.tryParse(_calCtrl.text) ?? 0.0;
+    final pro100 = double.tryParse(_proCtrl.text) ?? 0.0;
+    final carb100 = double.tryParse(_carbCtrl.text) ?? 0.0;
+    final fat100 = double.tryParse(_fatCtrl.text) ?? 0.0;
+    
+    final factor = totalGrams / 100.0;
+
     final entry = FoodEntry(
       id: const Uuid().v4(),
       name: name,
       mealType: _selectedMeal,
       dateTime: DateTime.now(),
-      calories: vals['calories']!,
-      protein: vals['protein']!,
-      carbs: vals['carbs']!,
-      fat: vals['fat']!,
-      quantity: _grams,
-      unit: 'جم',
+      calories: cal100 * factor,
+      protein: pro100 * factor,
+      carbs: carb100 * factor,
+      fat: fat100 * factor,
+      quantity: count,
+      unit: _selectedUnit,
+      saturatedFat: (double.tryParse(_satFatCtrl.text) ?? 0) * factor,
+      transFat: (double.tryParse(_transFatCtrl.text) ?? 0) * factor,
+      fiber: (double.tryParse(_fiberCtrl.text) ?? 0) * factor,
+      sugar: (double.tryParse(_sugarCtrl.text) ?? 0) * factor,
+      addedSugar: (double.tryParse(_addedSugarCtrl.text) ?? 0) * factor,
+      sodium: (double.tryParse(_sodiumCtrl.text) ?? 0) * factor,
+      cholesterol: (double.tryParse(_cholesterolCtrl.text) ?? 0) * factor,
+      vitaminD: (double.tryParse(_vitDCtrl.text) ?? 0) * factor,
+      calcium: (double.tryParse(_calciumCtrl.text) ?? 0) * factor,
+      iron: (double.tryParse(_ironCtrl.text) ?? 0) * factor,
+      potassium: (double.tryParse(_potassiumCtrl.text) ?? 0) * factor,
     );
+
     context.read<AppState>().addFoodEntry(entry);
     Navigator.pop(context);
   }
@@ -170,7 +188,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text('نتائج المسح الضوئي', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        title: Text('إدخال القيمة الغذائية', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         centerTitle: true,
         leading: IconButton(icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary), onPressed: () => Navigator.pop(context)),
       ),
@@ -179,7 +197,7 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
           : _error != null
               ? _buildErrorState()
               : _label != null
-                  ? _buildResultState()
+                  ? _buildManualEntryForm()
                   : const SizedBox.shrink(),
     );
   }
@@ -188,66 +206,41 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       const CircularProgressIndicator(color: AppColors.primary),
       const SizedBox(height: 24),
-      Text('جارِ تحليل الملصق...', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold)),
+      Text('جاري معالجة الصورة...', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold)),
     ]),
   );
 
   Widget _buildErrorState() => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Icon(Icons.error_outline_rounded, color: AppColors.coral, size: 64),
-        const SizedBox(height: 24),
-        Text(_error!, textAlign: TextAlign.center, style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textSecondary)),
-        const SizedBox(height: 24),
-        ElevatedButton(onPressed: _startScan, child: const Text('إعادة المحاولة')),
-      ]),
-    ),
+    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      const Icon(Icons.error_outline_rounded, color: AppColors.coral, size: 64),
+      const SizedBox(height: 16),
+      Text(_error!, style: GoogleFonts.cairo(color: AppColors.textSecondary)),
+      const SizedBox(height: 24),
+      ElevatedButton(onPressed: _startScan, child: const Text('إعادة المحاولة')),
+    ]),
   );
 
-  Widget _buildResultState() {
-    final vals = _actualValues;
-    final state = context.read<AppState>();
-    final profile = state.profile;
-
+  Widget _buildManualEntryForm() {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // ── معاينة الصورة ──
-        if (_imageFile != null)
-          Container(
-            height: 160,
-            margin: const EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              image: DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20)],
-            ),
-          ),
-
-        // ── بطاقة اسم المنتج والوجبة ──
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.cardBorder)),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('معلومات المنتج', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
-            const SizedBox(height: 16),
+        // ── بطاقة المعلومات الأساسية ──
+        _buildSectionCard(
+          title: 'معلومات المنتج والوجبة',
+          icon: Icons.info_outline_rounded,
+          children: [
             TextField(
               controller: _nameCtrl,
-              style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold),
-              decoration: InputDecoration(
-                filled: true, fillColor: AppColors.background,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                prefixIcon: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
-              ),
+              decoration: _inputDecoration('اسم المنتج', Icons.edit_rounded),
+              style: GoogleFonts.cairo(fontSize: 14),
             ),
             const SizedBox(height: 16),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(children: MealType.all.map((m) => Padding(
-                padding: const EdgeInsets.only(left: 10),
+                padding: const EdgeInsets.only(left: 8),
                 child: ChoiceChip(
-                  label: Text(MealType.label(m), style: GoogleFonts.cairo(fontSize: 12)),
+                  label: Text(MealType.label(m), style: GoogleFonts.cairo(fontSize: 11)),
                   selected: _selectedMeal == m,
                   onSelected: (s) => setState(() => _selectedMeal = m),
                   selectedColor: AppColors.primary,
@@ -255,109 +248,95 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
                 ),
               )).toList()),
             ),
-          ]),
+          ],
         ),
-        const SizedBox(height: 20),
 
-        // ── بطاقة الكمية ──
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [AppColors.teal.withValues(alpha: 0.1), Colors.white]),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.teal.withValues(alpha: 0.2)),
-          ),
-          child: Column(children: [
+        // ── بطاقة حجم الحصة ──
+        _buildSectionCard(
+          title: 'حجم الحصة والكمية المستهلكة',
+          icon: Icons.scale_rounded,
+          children: [
             Row(children: [
-              const Icon(Icons.scale_rounded, color: AppColors.teal, size: 20),
-              const SizedBox(width: 8),
-              Text('كم جرام ستتناول؟', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.teal)),
-            ]),
-            const SizedBox(height: 16),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              SizedBox(
-                width: 120,
+              Expanded(
+                flex: 2,
                 child: TextField(
                   controller: _gramsCtrl,
                   keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(fontSize: 40, fontWeight: FontWeight.w900, color: AppColors.teal),
-                  decoration: const InputDecoration(border: InputBorder.none, suffixText: 'جم', suffixStyle: TextStyle(fontSize: 16)),
+                  decoration: _inputDecoration('الكمية', Icons.onetwothree_rounded),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 3,
+                child: DropdownButtonFormField<String>(
+                  value: _selectedUnit,
+                  items: _units.map((u) => DropdownMenuItem(value: u, child: Text(u, style: GoogleFonts.cairo(fontSize: 14)))).toList(),
+                  onChanged: (v) => setState(() => _selectedUnit = v!),
+                  decoration: _inputDecoration('الوحدة', Icons.unfold_more_rounded),
                 ),
               ),
             ]),
-            const SizedBox(height: 16),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: [50, 100, 150, 200, 300].map((g) => Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: ChoiceChip(
-                  label: Text('$g جم', style: GoogleFonts.cairo(fontSize: 12)),
-                  selected: _grams.round() == g,
-                  onSelected: (s) => _gramsCtrl.text = g.toString(),
-                ),
-              )).toList()),
-            ),
-          ]),
+            if (_selectedUnit != 'جم' && _selectedUnit != 'مل') ...[
+              const SizedBox(height: 16),
+              TextField(
+                controller: _unitWeightCtrl,
+                keyboardType: TextInputType.number,
+                decoration: _inputDecoration('وزن الـ $_selectedUnit الواحدة (جم)', Icons.balance_rounded),
+              ),
+            ],
+          ],
         ),
-        const SizedBox(height: 20),
 
-        // ── بطاقة عرض القيم الملتقطة (للعلم فقط) ──
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.cardBorder)),
-          child: Column(children: [
-            Row(children: [
-              const Icon(Icons.visibility_rounded, color: AppColors.textSecondary, size: 20),
-              const SizedBox(width: 8),
-              Text('القيم الغذائية المكتشفة (لكل 100 جم)', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+        // ── بطاقة حقائق التغذية (لكل 100 جم) ──
+        _buildSectionCard(
+          title: 'حقائق التغذية (أدخل القيم لكل 100 جم)',
+          icon: Icons.fact_check_rounded,
+          children: [
+            _buildNutritionGrid([
+              _NutrientInput(ctrl: _calCtrl, label: 'سعرات', color: AppColors.primary),
+              _NutrientInput(ctrl: _proCtrl, label: 'بروتين', color: AppColors.protein),
+              _NutrientInput(ctrl: _carbCtrl, label: 'كارب', color: AppColors.carbs),
+              _NutrientInput(ctrl: _fatCtrl, label: 'دهون', color: AppColors.fat),
             ]),
-            const SizedBox(height: 20),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-              _CapturedValue(label: 'سعرات', value: _label!.caloriesPer100g.round().toString(), color: AppColors.primary),
-              _CapturedValue(label: 'بروتين', value: _label!.proteinPer100g.toStringAsFixed(1), color: AppColors.protein),
-              _CapturedValue(label: 'كارب', value: _label!.carbsPer100g.toStringAsFixed(1), color: AppColors.carbs),
-              _CapturedValue(label: 'دهون', value: _label!.fatPer100g.toStringAsFixed(1), color: AppColors.fat),
+            const Divider(height: 32),
+            Text('الدهون التفصيلية', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            _buildNutritionGrid([
+              _NutrientInput(ctrl: _satFatCtrl, label: 'مشبعة', color: AppColors.fat),
+              _NutrientInput(ctrl: _transFatCtrl, label: 'متحولة', color: AppColors.fat),
+              _NutrientInput(ctrl: _cholesterolCtrl, label: 'كوليسترول', color: AppColors.fat),
+              _NutrientInput(ctrl: _sodiumCtrl, label: 'صوديوم', color: Colors.orange),
             ]),
-          ]),
+            const Divider(height: 32),
+            Text('الكربوهيدرات والمعادن', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            _buildNutritionGrid([
+              _NutrientInput(ctrl: _fiberCtrl, label: 'ألياف', color: Colors.green),
+              _NutrientInput(ctrl: _sugarCtrl, label: 'سكر', color: Colors.pink),
+              _NutrientInput(ctrl: _addedSugarCtrl, label: 'سكر مضاف', color: Colors.redAccent),
+              _NutrientInput(ctrl: _vitDCtrl, label: 'فيتامين D', color: Colors.amber),
+            ]),
+            const SizedBox(height: 12),
+            _buildNutritionGrid([
+              _NutrientInput(ctrl: _calciumCtrl, label: 'كالسيوم', color: Colors.blueGrey),
+              _NutrientInput(ctrl: _ironCtrl, label: 'حديد', color: Colors.brown),
+              _NutrientInput(ctrl: _potassiumCtrl, label: 'بوتاسيوم', color: Colors.deepPurple),
+              const SizedBox.shrink(),
+            ]),
+          ],
         ),
-        const SizedBox(height: 20),
 
-        // ── التحليل الصحي والنتيجة النهائية ──
-        if (profile != null) _buildHealthAnalysis(profile),
-        const SizedBox(height: 20),
-
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-          ),
-          child: Column(children: [
-            Text('النتيجة النهائية لـ ${_grams.round()} جم', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary)),
-            const SizedBox(height: 16),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-              _FinalValue(label: 'سعرات', value: vals['calories']!.round().toString(), color: AppColors.primary),
-              _FinalValue(label: 'بروتين', value: vals['protein']!.toStringAsFixed(1), color: AppColors.protein),
-              _FinalValue(label: 'كارب', value: vals['carbs']!.toStringAsFixed(1), color: AppColors.carbs),
-              _FinalValue(label: 'دهون', value: vals['fat']!.toStringAsFixed(1), color: AppColors.fat),
-            ]),
-          ]),
-        ),
-        const SizedBox(height: 32),
-
+        const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: _addToLog,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              elevation: 4,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
-            child: Text('إضافة إلى السجل', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            child: Text('حفظ في السجل', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ),
         const SizedBox(height: 40),
@@ -365,47 +344,61 @@ class _NutritionScanScreenState extends State<NutritionScanScreen> {
     );
   }
 
-  Widget _buildHealthAnalysis(dynamic profile) {
-    final vals = _actualValues;
-    final cal = vals['calories']!;
-    final pro = vals['protein']!;
-    
-    String msg = 'الكمية المختارة تناسب هدفك.';
-    Color color = AppColors.teal;
-    IconData icon = Icons.check_circle_rounded;
-
-    if (cal > 400) {
-      msg = 'انتبه! السعرات مرتفعة لهذه الوجبة.';
-      color = AppColors.coral;
-      icon = Icons.warning_rounded;
-    } else if (pro > 20) {
-      msg = 'رائع! الوجبة غنية جداً بالبروتين.';
-      color = AppColors.teal;
-      icon = Icons.bolt_rounded;
-    }
-
+  Widget _buildSectionCard({required String title, required IconData icon, required List<Widget> children}) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.2))),
-      child: Row(children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(width: 12),
-        Expanded(child: Text(msg, style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.bold, color: color))),
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.cardBorder)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 8),
+          Text(title, style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        ]),
+        const SizedBox(height: 20),
+        ...children,
       ]),
+    );
+  }
+
+  Widget _buildNutritionGrid(List<Widget> items) {
+    return Row(children: items.map((it) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: it))).toList());
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, size: 18, color: AppColors.textSecondary),
+      labelStyle: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+      filled: true, fillColor: AppColors.background,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
   }
 }
 
-class _CapturedValue extends StatelessWidget {
-  const _CapturedValue({required this.label, required this.value, required this.color});
-  final String label, value;
+class _NutrientInput extends StatelessWidget {
+  const _NutrientInput({required this.ctrl, required this.label, required this.color});
+  final TextEditingController ctrl;
+  final String label;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      Text(value, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-      Text(label, style: GoogleFonts.cairo(fontSize: 10, color: AppColors.textSecondary)),
+      TextField(
+        controller: ctrl,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        textAlign: TextAlign.center,
+        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: color),
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color.withValues(alpha: 0.2))),
+        ),
+      ),
+      const SizedBox(height: 6),
+      Text(label, style: GoogleFonts.cairo(fontSize: 9, color: AppColors.textSecondary), textAlign: TextAlign.center),
     ]);
   }
 }
@@ -450,4 +443,7 @@ class _SourceOption extends StatelessWidget {
       ),
     );
   }
+    );
+  }
 }
+

@@ -9,9 +9,24 @@ class NutritionLabel {
   final double proteinPer100g;
   final double carbsPer100g;
   final double fatPer100g;
+  
+  // الدهون المفصلة
+  final double? saturatedFatPer100g;
+  final double? transFatPer100g;
+  
+  // الكربوهيدرات المفصلة
   final double? fiberPer100g;
   final double? sugarPer100g;
+  final double? addedSugarPer100g;
+  
+  // المعادن والفيتامينات
   final double? sodiumPer100g;
+  final double? cholesterolPer100g;
+  final double? vitaminDPer100g;
+  final double? calciumPer100g;
+  final double? ironPer100g;
+  final double? potassiumPer100g;
+
   final double? servingSizeG; // حجم الحصة المكتشف بالجرام
   final String rawText;
 
@@ -21,9 +36,17 @@ class NutritionLabel {
     required this.proteinPer100g,
     required this.carbsPer100g,
     required this.fatPer100g,
+    this.saturatedFatPer100g,
+    this.transFatPer100g,
     this.fiberPer100g,
     this.sugarPer100g,
+    this.addedSugarPer100g,
     this.sodiumPer100g,
+    this.cholesterolPer100g,
+    this.vitaminDPer100g,
+    this.calciumPer100g,
+    this.ironPer100g,
+    this.potassiumPer100g,
     this.servingSizeG,
     required this.rawText,
   });
