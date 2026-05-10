@@ -38,6 +38,9 @@ class ProgressScreen extends StatelessWidget {
                     // BMI Card
                     if (profile != null) _BmiCard(profile: profile),
                     const SizedBox(height: 16),
+                    // Goal Card
+                    if (profile != null) _GoalCard(profile: profile),
+                    const SizedBox(height: 16),
                     // Today Summary
                     _TodaySummaryCard(eaten: eaten, goal: goal, water: water, waterGoal: waterGoal),
                     const SizedBox(height: 16),
@@ -115,6 +118,76 @@ class _BmiCard extends StatelessWidget {
   }
 }
 
+class _GoalCard extends StatelessWidget {
+  const _GoalCard({required this.profile});
+  final dynamic profile;
+
+  @override
+  Widget build(BuildContext context) {
+    String recommended = 'maintain';
+    final bmi = profile.bmi as double;
+    if (bmi < 18.5) recommended = 'gain';
+    else if (bmi >= 25.0) recommended = 'lose';
+
+    String goalText = '';
+    if (profile.goal == 'lose') goalText = 'إنقاص الوزن 🔥';
+    else if (profile.goal == 'gain') goalText = 'زيادة الوزن 💪';
+    else goalText = 'المحافظة على الوزن ⚖️';
+
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surface, borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.cardBorder, width: 0.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppColors.gold.withValues(alpha: 0.15), shape: BoxShape.circle),
+                child: const Icon(Icons.stars_rounded, color: AppColors.gold, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('الهدف الحالي', style: GoogleFonts.cairo(fontSize: 13, color: AppColors.textSecondary)),
+                  Text(goalText, style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        if (profile.goal != recommended)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.coral.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
+              ),
+              child: Row(children: [
+                const Icon(Icons.info_outline_rounded, color: AppColors.coral, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text(
+                  profile.gender == 'female'
+                      ? 'هالهدف مو أنسب شيء لكِ بناءً على وزنك، بس القرار بيدك وإحنا بندعمك! 💪'
+                      : 'هالهدف مو أنسب شيء لك بناءً على وزنك، بس القرار بيدك وإحنا بندعمك! 💪',
+                  style: GoogleFonts.cairo(fontSize: 11, color: AppColors.coral, fontWeight: FontWeight.bold),
+                )),
+              ]),
+            ).animate().fadeIn(delay: 300.ms),
+          ),
+      ],
+    );
+  }
+}
+
 class _TodaySummaryCard extends StatelessWidget {
   const _TodaySummaryCard({required this.eaten, required this.goal, required this.water, required this.waterGoal});
   final int eaten, goal, water, waterGoal;
@@ -171,7 +244,7 @@ class _MacroProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profileGoal = state.profile?.goal ?? 'maintain';
-    final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
+    final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal, weightKg: state.profile?.weightKg ?? 70.0);
     final pGoal = macroGoals['protein']!.round();
     final cGoal = macroGoals['carbs']!.round();
     final fGoal = macroGoals['fat']!.round();
@@ -289,7 +362,7 @@ class _MacroWeeklyChart extends StatelessWidget {
     final dayNames = ['س', 'ح', 'إث', 'ث', 'ر', 'خ', 'ج'];
     
     final profileGoal = state.profile?.goal ?? 'maintain';
-    final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
+    final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal, weightKg: state.profile?.weightKg ?? 70.0);
     final pGoal = macroGoals['protein']!.round();
     final cGoal = macroGoals['carbs']!.round();
     final fGoal = macroGoals['fat']!.round();

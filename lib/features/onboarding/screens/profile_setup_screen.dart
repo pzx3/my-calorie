@@ -115,7 +115,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
       wakeHour: _wakeHour,
       sleepHour: _sleepHour,
     );
-    Navigator.pushReplacement(
+    Navigator.push(
         context,
         PageRouteBuilder(
           pageBuilder: (_, __, ___) => ResultsScreen(profile: profile, rawTdee: tdeeVal.round()),
@@ -219,7 +219,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                     _ActivityPage(
                         selected: _activity,
                         onSelect: (v) => setState(() => _activity = v)),
-                    _GoalPage(selected: _goal, bmi: _bmi, gender: _gender, onSelect: (v) => setState(() => _goal = v)),
+                    _GoalPage(
+                        selected: _goal,
+                        bmi: _bmi,
+                        gender: _gender,
+                        age: int.tryParse(_ageCtrl.text) ?? 25,
+                        heightCm: double.tryParse(_heightCtrl.text) ?? 170.0,
+                        onSelect: (v) => setState(() => _goal = v)),
                     _SchedulePage(
                         wakeHour: _wakeHour,
                         sleepHour: _sleepHour,
@@ -483,16 +489,43 @@ class _ActivityBtn extends StatelessWidget {
 }
 
 class _GoalPage extends StatelessWidget {
-  const _GoalPage({required this.selected, required this.bmi, required this.gender, required this.onSelect});
+  const _GoalPage({required this.selected, required this.bmi, required this.gender, required this.age, required this.heightCm, required this.onSelect});
   final String selected, gender;
   final double? bmi;
+  final int age;
+  final double heightCm;
   final ValueChanged<String> onSelect;
+  
+  Widget _buildMessageCard({required IconData icon, required Color color, required String title, required String text}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: color, fontSize: 14)),
+              Text(
+                text,
+                style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 12, height: 1.4),
+              ),
+            ]),
+          ),
+        ]),
+      ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isFemale = gender == 'female';
-    final isUnderweight = bmi != null && bmi! < 18.5;
-    final showWarning = selected == 'lose' && isUnderweight;
-    final showTip = selected == 'maintain' && isUnderweight;
 
     String? recommended;
     if (bmi != null) {
@@ -501,6 +534,88 @@ class _GoalPage extends StatelessWidget {
       else recommended = 'maintain';
     }
     final isSmartSelected = selected == recommended;
+    final minWeight = (18.5 * (heightCm / 100) * (heightCm / 100)).toStringAsFixed(1);
+
+    final messages = <Widget>[];
+
+    if (bmi != null) {
+      if (bmi! < 18.5) {
+        if (selected == 'lose') {
+          messages.add(_buildMessageCard(
+            icon: Icons.warning_amber_rounded,
+            color: AppColors.coral,
+            title: 'تنبيه صحي ⚠️',
+            text: isFemale ? 'وزنك الحالي تحت الطبيعي، نزول وزنك بهالمرحلة ممكن يضرك! انتبهي لصحتك.' : 'وزنك الحالي تحت الطبيعي، نزول وزنك بهالمرحلة ممكن يضرك! انتبه لصحتك.',
+          ));
+        } else if (selected == 'maintain') {
+          messages.add(_buildMessageCard(
+            icon: Icons.info_outline_rounded,
+            color: AppColors.teal,
+            title: 'نصيحة',
+            text: isFemale ? 'وزنك تحت الطبيعي شوي، لو مرتاحة عليه ممتاز، بس الزيادة البسيطة بتفيد صحتك أكثر.' : 'وزنك تحت الطبيعي شوي، لو مرتاح عليه ممتاز، بس الزيادة البسيطة بتفيد صحتك أكثر.',
+          ));
+        }
+      } else if (bmi! >= 25.0) {
+        if (selected == 'gain') {
+          messages.add(_buildMessageCard(
+            icon: Icons.warning_amber_rounded,
+            color: AppColors.coral,
+            title: 'تنبيه صحي ⚠️',
+            text: isFemale ? 'وزنك يعتبر زايد، زيادة وزنك أكثر ممكن تتعبك وتأثر على صحتك.' : 'وزنك يعتبر زايد، زيادة وزنك أكثر ممكن تتعبك وتأثر على صحتك.',
+          ));
+        } else if (selected == 'maintain') {
+          messages.add(_buildMessageCard(
+            icon: Icons.info_outline_rounded,
+            color: AppColors.teal,
+            title: 'نصيحة',
+            text: isFemale ? 'محافظتك على وزنك حلوة، بس لو تنزلينه شوي بيكون أخف وأحسن لصحتك.' : 'محافظتك على وزنك حلوة، بس لو تنزله شوي بيكون أخف وأحسن لصحتك.',
+          ));
+        }
+      } else {
+        if (selected == 'lose') {
+          messages.add(_buildMessageCard(
+            icon: Icons.info_outline_rounded,
+            color: AppColors.teal,
+            title: 'ملاحظة',
+            text: isFemale 
+                ? 'وزنك طبيعي ما شاء الله! النزول الحين بيكون للتنشيف، بس انتبهي لا تنزلين عن ($minWeight كجم) عشان تحافظين على صحتك.' 
+                : 'وزنك طبيعي ما شاء الله! النزول الحين بيكون للتنشيف، بس انتبه لا تنزل عن ($minWeight كجم) عشان تحافظ على صحتك.',
+          ));
+        } else if (selected == 'gain') {
+          messages.add(_buildMessageCard(
+            icon: Icons.info_outline_rounded,
+            color: AppColors.teal,
+            title: 'ملاحظة',
+            text: isFemale ? 'وزنك مثالي وحلو! زيادة الوزن للبناء العضلي خيار بطل، شدي حيلك بالتمرين.' : 'وزنك مثالي وحلو! زيادة الوزن للبناء العضلي خيار بطل، شد حيلك بالتمرين.',
+          ));
+        }
+      }
+    }
+
+    if (isSmartSelected) {
+      messages.add(_buildMessageCard(
+        icon: Icons.auto_awesome_rounded,
+        color: AppColors.primary,
+        title: 'اختيار ذكي 💡',
+        text: isFemale ? 'هذا الخيار هو الأنسب لكِ ولصحتك بناءً على مؤشر كتلتك.' : 'هذا الخيار هو الأنسب لك ولصحتك بناءً على مؤشر كتلتك.',
+      ));
+    }
+
+    if (age > 0 && age < 18) {
+      messages.add(_buildMessageCard(
+        icon: Icons.child_care_rounded,
+        color: Colors.orange,
+        title: 'مرحلة النمو 🌟',
+        text: isFemale ? 'جسمك لسا بمرحلة النمو، ركزي على أكلك الصحي وابعدي عن الدايت القاسي.' : 'جسمك لسا بمرحلة النمو، ركز على أكلك الصحي وابعد عن الدايت القاسي.',
+      ));
+    } else if (age >= 50) {
+      messages.add(_buildMessageCard(
+        icon: Icons.health_and_safety_rounded,
+        color: Colors.purple,
+        title: 'نصيحة ذهبية 👑',
+        text: isFemale ? 'بهالعمر يقل معدل الحرق شوي، ركزي على بروتينك وحافظي على نشاطك وعضلاتك.' : 'بهالعمر يقل معدل الحرق شوي، ركز على بروتينك وحافظ على نشاطك وعضلاتك.',
+      ));
+    }
 
     return _SetupPage(
       emoji: '🎯',
@@ -511,87 +626,23 @@ class _GoalPage extends StatelessWidget {
             value: 'lose',
             color: AppColors.coral,
             selected: selected,
+            gender: gender,
             onSelect: onSelect),
         const SizedBox(height: 12),
         _GoalBtn(
             value: 'maintain',
             color: AppColors.teal,
             selected: selected,
+            gender: gender,
             onSelect: onSelect),
         const SizedBox(height: 12),
         _GoalBtn(
             value: 'gain',
             color: AppColors.primary,
             selected: selected,
+            gender: gender,
             onSelect: onSelect),
-        if (showWarning) ...[
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.coral.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
-            ),
-            child: Row(children: [
-              const Icon(Icons.warning_amber_rounded, color: AppColors.coral, size: 28),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('تنبيه صحي ⚠️', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.coral, fontSize: 14)),
-                  Text(
-                    'وزنك الحالي (${bmi!.toStringAsFixed(1)}) تحت المعدل الطبيعي. لا ننصح بإنقاص الوزن حالياً لسلامتك.',
-                    style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 12, height: 1.4),
-                  ),
-                ]),
-              ),
-            ]),
-          ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
-        ],
-        if (showTip) ...[
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.teal.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.teal.withValues(alpha: 0.3)),
-            ),
-            child: Row(children: [
-              const Icon(Icons.info_outline_rounded, color: AppColors.teal, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  isFemale 
-                    ? 'على الرغم من أنكِ تحت المعدل الطبيعي، إلا أن الحفاظ على وزنك الحالي خيار متاح إذا كنتِ مرتاحةً معه.'
-                    : 'على الرغم من أنك تحت المعدل الطبيعي، إلا أن الحفاظ على وزنك الحالي خيار متاح إذا كنت مرتاحاً معه.',
-                  style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 12, height: 1.5),
-                ),
-              ),
-            ]),
-          ).animate().fadeIn(duration: 600.ms),
-        ],
-        if (isSmartSelected && !showWarning) ...[
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-            ),
-            child: Row(children: [
-              const Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'هذا هو الخيار الذكي والأفضل لحالتك الصحية بناءً على مؤشر كتلة جسمك الحالي.',
-                  style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ]),
-          ).animate().fadeIn(delay: 200.ms),
-        ],
+        ...messages,
       ]),
     );
   }
@@ -602,8 +653,9 @@ class _GoalBtn extends StatelessWidget {
       {required this.value,
       required this.color,
       required this.selected,
+      required this.gender,
       required this.onSelect});
-  final String value, selected;
+  final String value, selected, gender;
   final Color color;
   final ValueChanged<String> onSelect;
   @override
@@ -624,7 +676,7 @@ class _GoalBtn extends StatelessWidget {
         child: Row(children: [
           Text(GoalType.emoji(value), style: const TextStyle(fontSize: 22)),
           const SizedBox(width: 12),
-          Text(GoalType.label(value),
+          Text(GoalType.label(value, gender),
               style: GoogleFonts.cairo(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

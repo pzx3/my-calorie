@@ -62,6 +62,8 @@ class NotificationService {
     // Cancel all existing water reminders first
     await cancelWaterReminders();
 
+    if (!profile.waterRemindersEnabled) return;
+
     final schedule = profile.waterSchedule;
     final isFemale = profile.gender == 'female';
 

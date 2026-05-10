@@ -25,7 +25,7 @@ class ProfileScreen extends StatelessWidget {
               SliverAppBar(
                 backgroundColor: AppColors.background,
                 pinned: true,
-                title: Text('إعدادات ملفي 👤',
+                title: Text('ملفي الشخصي 👤',
                     style: GoogleFonts.cairo(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -98,67 +98,105 @@ class ProfileScreen extends StatelessWidget {
     final weightCtrl = TextEditingController(text: p.weightKg.toString());
     final heightCtrl = TextEditingController(text: p.heightCm.toString());
     final ageCtrl = TextEditingController(text: p.age.toString());
+    String currentGoal = p.goal;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
-        padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('حدث بياناتك',
-              style: GoogleFonts.cairo(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary)),
-          const SizedBox(height: 20),
-          TextField(
-              controller: weightCtrl,
-              keyboardType: TextInputType.number,
-              style: GoogleFonts.cairo(color: AppColors.textPrimary),
-              decoration: const InputDecoration(labelText: 'الوزن (كجم)')),
-          const SizedBox(height: 12),
-          TextField(
-              controller: heightCtrl,
-              keyboardType: TextInputType.number,
-              style: GoogleFonts.cairo(color: AppColors.textPrimary),
-              decoration: const InputDecoration(labelText: 'الطول (سم)')),
-          const SizedBox(height: 12),
-          TextField(
-              controller: ageCtrl,
-              keyboardType: TextInputType.number,
-              style: GoogleFonts.cairo(color: AppColors.textPrimary),
-              decoration: const InputDecoration(labelText: 'العمر')),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                final w = double.tryParse(weightCtrl.text) ?? p.weightKg;
-                final h = double.tryParse(heightCtrl.text) ?? p.heightCm;
-                final a = int.tryParse(ageCtrl.text) ?? p.age;
-                final bmrVal = CalorieCalculator.bmr(
-                    weightKg: w, heightCm: h, age: a, gender: p.gender);
-                final tdeeVal = CalorieCalculator.tdee(
-                    bmr: bmrVal, activityLevel: p.activityLevel);
-                final newGoal =
-                    CalorieCalculator.goalCalories(tdee: tdeeVal, goal: p.goal, gender: p.gender);
-                state.saveProfile(p.copyWith(
-                    weightKg: w,
-                    heightCm: h,
-                    age: a,
-                    tdeeKcal: newGoal,
-                    waterGoalMl: CalorieCalculator.waterGoalMl(weightKg: w, gender: p.gender, activityLevel: p.activityLevel)));
-                Navigator.pop(context);
-              },
-              child: Text('حفظ',
+      builder: (_) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+                20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text('حدث بياناتك',
                   style: GoogleFonts.cairo(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ]),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary)),
+              const SizedBox(height: 20),
+              TextField(
+                  controller: weightCtrl,
+                  keyboardType: TextInputType.number,
+                  style: GoogleFonts.cairo(color: AppColors.textPrimary),
+                  decoration: const InputDecoration(labelText: 'الوزن (كجم)')),
+              const SizedBox(height: 12),
+              TextField(
+                  controller: heightCtrl,
+                  keyboardType: TextInputType.number,
+                  style: GoogleFonts.cairo(color: AppColors.textPrimary),
+                  decoration: const InputDecoration(labelText: 'الطول (سم)')),
+              const SizedBox(height: 12),
+              TextField(
+                  controller: ageCtrl,
+                  keyboardType: TextInputType.number,
+                  style: GoogleFonts.cairo(color: AppColors.textPrimary),
+                  decoration: const InputDecoration(labelText: 'العمر')),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text('الهدف الصحي', style: GoogleFonts.cairo(color: AppColors.textSecondary, fontSize: 13)),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: currentGoal,
+                    isExpanded: true,
+                    dropdownColor: AppColors.surface,
+                    style: GoogleFonts.cairo(color: AppColors.textPrimary, fontSize: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    items: const [
+                      DropdownMenuItem(value: 'lose', child: Text('إنقاص الوزن 🔥')),
+                      DropdownMenuItem(value: 'maintain', child: Text('المحافظة على الوزن ⚖️')),
+                      DropdownMenuItem(value: 'gain', child: Text('زيادة الوزن 💪')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setModalState(() => currentGoal = v);
+                      }
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final w = double.tryParse(weightCtrl.text) ?? p.weightKg;
+                    final h = double.tryParse(heightCtrl.text) ?? p.heightCm;
+                    final a = int.tryParse(ageCtrl.text) ?? p.age;
+                    final bmrVal = CalorieCalculator.bmr(
+                        weightKg: w, heightCm: h, age: a, gender: p.gender);
+                    final tdeeVal = CalorieCalculator.tdee(
+                        bmr: bmrVal, activityLevel: p.activityLevel);
+                    final newGoalKcal =
+                        CalorieCalculator.goalCalories(tdee: tdeeVal, goal: currentGoal, gender: p.gender);
+                    state.saveProfile(p.copyWith(
+                        weightKg: w,
+                        heightCm: h,
+                        age: a,
+                        goal: currentGoal,
+                        tdeeKcal: newGoalKcal,
+                        waterGoalMl: CalorieCalculator.waterGoalMl(weightKg: w, gender: p.gender, activityLevel: p.activityLevel)));
+                    Navigator.pop(context);
+                  },
+                  child: Text('حفظ',
+                      style: GoogleFonts.cairo(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ]),
+          );
+        }
       ),
     );
   }
@@ -172,7 +210,10 @@ class ProfileScreen extends StatelessWidget {
                   style: GoogleFonts.cairo(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold)),
-              content: Text('بتمسح كل بياناتك وسجلاتك للأبد؟ ترى ما تقدر ترجعها بعدين.. متأكد؟',
+              content: Text(
+                state.profile?.gender == 'female'
+                  ? 'بتمسحين كل بياناتك وسجلاتك للأبد؟ ترى ما تقدرين ترجعينها بعدين.. متأكدة؟'
+                  : 'بتمسح كل بياناتك وسجلاتك للأبد؟ ترى ما تقدر ترجعها بعدين.. متأكد؟',
                   style: GoogleFonts.cairo(color: AppColors.textSecondary)),
               actions: [
                 TextButton(
@@ -238,7 +279,7 @@ class _AvatarCard extends StatelessWidget {
               decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6)),
-              child: Text(GoalType.label(profile.goal),
+              child: Text(GoalType.label(profile.goal, profile.gender),
                   style: GoogleFonts.cairo(
                       fontSize: 10,
                       color: Colors.white,
@@ -414,7 +455,7 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
               child: Text(
-            'كل الحسابات (موية، BMI، سعرات) تتبع معايير مثالي mithaly.sa 🇸🇦.',
+            'كل الحسابات (موية، BMI، سعرات) تتبع معايير موقع الوزن المثالي 🇸🇦.',
             style: GoogleFonts.cairo(
                 fontSize: 11, color: AppColors.textSecondary, height: 1.5),
           )),

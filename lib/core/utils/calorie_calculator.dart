@@ -129,11 +129,22 @@ class CalorieCalculator {
     String activityLevel = 'sedentary',
   }) {
     // Mithaly.sa formula: weight × 0.033 liters
-    final waterLiters = weightKg * 0.033;
+    double waterLiters = weightKg * 0.033;
+
+    // ACSM (American College of Sports Medicine) / WHO Standards:
+    // Add ~350ml for every 30 minutes of exercise.
+    switch (activityLevel) {
+      case 'light':      waterLiters += 0.35; break; // ~30 mins
+      case 'moderate':   waterLiters += 0.50; break; // ~45 mins
+      case 'active':     waterLiters += 0.70; break; // ~60 mins
+      case 'veryActive': waterLiters += 1.05; break; // ~90 mins
+      default: break;
+    }
+
     final waterMl = waterLiters * 1000;
 
     // Round to nearest 50 mL for cleanliness
-    return ((waterMl / 50).round() * 50).clamp(1500, 5000);
+    return ((waterMl / 50).round() * 50).clamp(1500, 6000);
   }
 
   // ──────────────────── BMI (Mithaly.sa) ────────────────────
@@ -179,30 +190,54 @@ class CalorieCalculator {
     };
   }
 
-  static Map<String, double> macroGoals({required int kcal, required String goal}) {
-    double proteinRatio, carbsRatio, fatRatio;
+  // ──────────────────── Macros (Evidence-Based) ────────────────────
+  /// Calculates macros based on scientific sports nutrition guidelines:
+  /// Protein: 1.6 - 2.2 g/kg of body weight (higher for fat loss to preserve muscle).
+  /// Fat: 0.8 - 1.0 g/kg (minimum for hormonal health) or ~25% of calories.
+  /// Carbs: Remainder of calories.
+  static Map<String, double> macroGoals({required int kcal, required String goal, required double weightKg}) {
+    double proteinGrams;
+    double fatGrams;
+    double carbsGrams;
+
     switch (goal) {
       case 'lose':
-        proteinRatio = 0.40;
-        carbsRatio = 0.30;
-        fatRatio = 0.30;
+        // High protein to preserve muscle during deficit
+        proteinGrams = weightKg * 2.2;
+        // Fat at safe minimum (~0.8g/kg) or 25% of calories, whichever is higher to preserve hormones
+        fatGrams = (weightKg * 0.8) > (kcal * 0.25 / 9) ? (weightKg * 0.8) : (kcal * 0.25 / 9);
         break;
       case 'gain':
-        proteinRatio = 0.30;
-        carbsRatio = 0.50;
-        fatRatio = 0.20;
+        // Moderate protein is sufficient in surplus (1.8g/kg)
+        proteinGrams = weightKg * 1.8;
+        // Moderate fat (1.0g/kg)
+        fatGrams = weightKg * 1.0;
         break;
       case 'maintain':
       default:
-        proteinRatio = 0.30;
-        carbsRatio = 0.40;
-        fatRatio = 0.30;
+        // Baseline protein (1.8g/kg) and fat (1.0g/kg)
+        proteinGrams = weightKg * 1.8;
+        fatGrams = weightKg * 1.0;
         break;
     }
+
+    // Calculate remaining calories for carbs
+    double remainingKcal = kcal - (proteinGrams * 4) - (fatGrams * 9);
+    
+    // If remaining calories are extremely low or negative, re-adjust proportions
+    if (remainingKcal < 0) {
+      // Fallback to percentage-based if extreme deficit prevents weight-based minimums
+      proteinGrams = (kcal * (goal == 'lose' ? 0.40 : 0.30)) / 4;
+      fatGrams = (kcal * (goal == 'lose' ? 0.30 : 0.25)) / 9;
+      carbsGrams = (kcal * (goal == 'lose' ? 0.30 : 0.45)) / 4;
+    } else {
+      carbsGrams = remainingKcal / 4;
+    }
+
     return {
-      'protein': (kcal * proteinRatio / 4).roundToDouble(),
-      'carbs':   (kcal * carbsRatio / 4).roundToDouble(),
-      'fat':     (kcal * fatRatio / 9).roundToDouble(),
+      'protein': proteinGrams.roundToDouble(),
+      'carbs': carbsGrams.roundToDouble(),
+      'fat': fatGrams.roundToDouble(),
     };
   }
 }

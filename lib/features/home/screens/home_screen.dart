@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/food_entry.dart';
+import '../../../core/models/user_profile.dart';
 import '../../../shared/widgets/app_logo.dart';
 import '../../food_log/screens/food_log_screen.dart';
 import '../../profile/screens/weight_history_screen.dart';
@@ -51,7 +52,7 @@ class HomeScreen extends StatelessWidget {
                                 children: [
                                   const AppLogo(size: 18, showShadow: false),
                                   const SizedBox(width: 6),
-                                  Text('مرحباً، ${profile?.name ?? (profile?.gender == 'female' ? 'صديقتي' : 'صديقي')} 👋',
+                                  Text('مرحباً، ${profile?.name ?? ''} 👋',
                                       style: GoogleFonts.cairo(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -107,7 +108,7 @@ class HomeScreen extends StatelessWidget {
                     // ── Macros Row ──
                     Builder(builder: (context) {
                       final profileGoal = state.profile?.goal ?? 'maintain';
-                      final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
+                      final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal, weightKg: state.profile?.weightKg ?? 70.0);
                       return MacroRow(
                         protein: state.proteinToday.round(),
                         carbs: state.carbsToday.round(),
@@ -484,7 +485,7 @@ class _MealSection extends StatelessWidget {
               Text(MealType.emoji(mealType),
                   style: const TextStyle(fontSize: 22)),
               const SizedBox(width: 10),
-              Text(GoalType.label(mealType, state.profile?.gender ?? 'male'),
+              Text(MealType.label(mealType),
                   style: GoogleFonts.cairo(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,

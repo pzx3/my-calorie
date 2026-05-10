@@ -64,8 +64,18 @@ class _ResultsScreenState extends State<ResultsScreen> {
             child: Column(
               children: [
                 // ── Header ──
-                const Text('🎉', style: TextStyle(fontSize: 40))
-                    .animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textSecondary, size: 22),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const Text('🎉', style: TextStyle(fontSize: 40))
+                        .animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+                    const SizedBox(width: 48), // To balance the back button
+                  ],
+                ),
                 const SizedBox(height: 6),
                 Text('نتائجك الشخصية',
                     style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary))
@@ -77,7 +87,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     color: AppColors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text('معايير mithaly.sa 🇸🇦',
+                  child: Text('معايير موقع الوزن المثالي 🇸🇦',
                       style: GoogleFonts.cairo(fontSize: 10, color: AppColors.green, fontWeight: FontWeight.w600)),
                 ).animate().fadeIn(delay: 300.ms),
                 const SizedBox(height: 14),
@@ -154,11 +164,42 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     icon: widget.profile.goal == 'lose' ? Icons.local_fire_department_rounded : Icons.fitness_center_rounded,
                     label: 'الهدف',
                     value: GoalType.emoji(widget.profile.goal),
-                    sub: GoalType.label(widget.profile.goal),
+                    sub: GoalType.label(widget.profile.goal, widget.profile.gender),
                     color: AppColors.gold,
                   )),
                 ]).animate().fadeIn(delay: 500.ms),
                 const SizedBox(height: 10),
+
+                // ── Warning if goal not recommended ──
+                Builder(builder: (context) {
+                  String recommended = 'maintain';
+                  if (bmi < 18.5) recommended = 'gain';
+                  else if (bmi >= 25.0) recommended = 'lose';
+                  
+                  if (widget.profile.goal != recommended) {
+                    final isFemale = widget.profile.gender == 'female';
+                    final msg = isFemale 
+                        ? 'هالهدف مو أنسب شيء لكِ بناءً على وزنك، بس القرار بيدك وإحنا بندعمك! 💪'
+                        : 'هالهدف مو أنسب شيء لك بناءً على وزنك، بس القرار بيدك وإحنا بندعمك! 💪';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.coral.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(children: [
+                          const Icon(Icons.info_outline_rounded, color: AppColors.coral, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(msg, style: GoogleFonts.cairo(fontSize: 11, color: AppColors.coral, fontWeight: FontWeight.bold))),
+                        ]),
+                      ).animate().fadeIn(delay: 550.ms),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
 
                 // ── TDEE Card ──
                 Container(
@@ -240,25 +281,31 @@ class _ResultsScreenState extends State<ResultsScreen> {
                           ),
                         ),
                         // Recommended Marker
-                        LayoutBuilder(builder: (context, constraints) {
-                          final recommended = widget.profile.tdeeKcal;
-                          final double padding = 24.0; // Estimate slider padding
-                          final double width = constraints.maxWidth - (padding * 2);
-                          final double percent = (recommended - _minKcal) / (_maxKcal - _minKcal);
-                          
-                          return Positioned(
-                            left: padding + (width * percent) - 1,
-                            top: 10,
-                            bottom: 10,
-                            child: GestureDetector(
-                              onTap: () => setState(() => _customKcal = recommended),
-                              child: Container(
-                                width: 2,
-                                color: Colors.white24,
-                              ),
-                            ),
-                          );
-                        }),
+                        Positioned.fill(
+                          child: LayoutBuilder(builder: (context, constraints) {
+                            final recommended = widget.profile.tdeeKcal;
+                            final double padding = 24.0; // Estimate slider padding
+                            final double width = constraints.maxWidth - (padding * 2);
+                            final double percent = (_maxKcal == _minKcal) ? 0.0 : (recommended - _minKcal) / (_maxKcal - _minKcal);
+                            
+                            return Stack(
+                              children: [
+                                Positioned(
+                                  left: padding + (width * percent) - 1,
+                                  top: 10,
+                                  bottom: 10,
+                                  child: GestureDetector(
+                                    onTap: () => setState(() => _customKcal = recommended),
+                                    child: Container(
+                                      width: 2,
+                                      color: Colors.white24,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                        ),
                       ],
                     ),
                     Padding(
@@ -290,7 +337,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 const SizedBox(height: 10),
 
                 // ── Macro Distribution ──
-                _MacroInfoCard(kcal: _customKcal, goal: widget.profile.goal).animate().fadeIn(delay: 750.ms),
+                _MacroInfoCard(kcal: _customKcal, goal: widget.profile.goal, weightKg: widget.profile.weightKg).animate().fadeIn(delay: 750.ms),
                 const SizedBox(height: 20),
 
                 // ── Start Button ──
@@ -430,12 +477,13 @@ class _CalorieDiffChip extends StatelessWidget {
 }
 
 class _MacroInfoCard extends StatelessWidget {
-  const _MacroInfoCard({required this.kcal, required this.goal});
+  const _MacroInfoCard({required this.kcal, required this.goal, required this.weightKg});
   final int kcal;
   final String goal;
+  final double weightKg;
   @override
   Widget build(BuildContext context) {
-    final goals = CalorieCalculator.macroGoals(kcal: kcal, goal: goal);
+    final goals = CalorieCalculator.macroGoals(kcal: kcal, goal: goal, weightKg: weightKg);
     final protein = goals['protein']!.round();
     final carbs   = goals['carbs']!.round();
     final fat     = goals['fat']!.round();

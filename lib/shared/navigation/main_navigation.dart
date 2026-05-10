@@ -65,7 +65,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
                 _NavItem(icon: Icons.restaurant_rounded,   label: 'الطعام',   index: 1, current: _currentIndex, onTap: _onTap),
                 _NavItem(icon: Icons.water_drop_rounded,   label: 'الماء',    index: 2, current: _currentIndex, onTap: _onTap),
                 _NavItem(icon: Icons.bar_chart_rounded,    label: 'التقدم',   index: 3, current: _currentIndex, onTap: _onTap),
-                _NavItem(icon: Icons.person_rounded,       label: 'حسابي',    index: 4, current: _currentIndex, onTap: _onTap),
+                _NavItem(icon: Icons.person_rounded,       label: 'ملفي',    index: 4, current: _currentIndex, onTap: _onTap),
               ],
             ),
           ),

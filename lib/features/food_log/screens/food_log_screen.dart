@@ -31,7 +31,7 @@ class FoodLogScreen extends StatelessWidget {
         builder: (context, state, _) {
           final goal = state.profile?.tdeeKcal ?? 2000;
           final profileGoal = state.profile?.goal ?? 'maintain';
-          final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal);
+          final macroGoals = CalorieCalculator.macroGoals(kcal: goal, goal: profileGoal, weightKg: state.profile?.weightKg ?? 70.0);
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [

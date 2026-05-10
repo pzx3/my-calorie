@@ -74,6 +74,7 @@ class UserProfile {
   final List<int> quickAddOz;
   final int? preferredCupMl; // User's preferred cup size in ml
   final bool   waterSetupComplete;
+  final bool   waterRemindersEnabled;
   final List<WeightEntry> weightHistory;
   final DateTime? lastWeightUpdate;
 
@@ -93,6 +94,7 @@ class UserProfile {
     this.quickAddOz = const [5, 8, 12, 16],
     this.preferredCupMl,
     this.waterSetupComplete = false,
+    this.waterRemindersEnabled = false,
     this.weightHistory = const [],
     this.lastWeightUpdate,
   });
@@ -190,6 +192,7 @@ class UserProfile {
     List<int>? quickAddOz,
     int? preferredCupMl,
     bool? waterSetupComplete,
+    bool? waterRemindersEnabled,
     List<WeightEntry>? weightHistory,
     DateTime? lastWeightUpdate,
     bool clearPreferredCup = false,
@@ -210,6 +213,7 @@ class UserProfile {
         quickAddOz: quickAddOz ?? this.quickAddOz,
         preferredCupMl: clearPreferredCup ? null : (preferredCupMl ?? this.preferredCupMl),
         waterSetupComplete: waterSetupComplete ?? this.waterSetupComplete,
+        waterRemindersEnabled: waterRemindersEnabled ?? this.waterRemindersEnabled,
         weightHistory: weightHistory ?? this.weightHistory,
         lastWeightUpdate: lastWeightUpdate ?? this.lastWeightUpdate,
       );
@@ -229,7 +233,8 @@ class UserProfile {
         quickAddMl: (json['quickAddMl'] as List?)?.map((e) => (e as num).toInt()).toList() ?? [150, 250, 350, 500],
         quickAddOz: (json['quickAddOz'] as List?)?.map((e) => (e as num).toInt()).toList() ?? [5, 8, 12, 16],
         preferredCupMl: (json['preferredCupMl'] as num?)?.toInt(),
-        waterSetupComplete: json['waterSetupComplete'] as bool? ?? false,
+        waterSetupComplete: json['waterSetupComplete'] == true,
+        waterRemindersEnabled: json['waterRemindersEnabled'] == true,
         weightHistory: (json['weightHistory'] as List?)
                 ?.map((e) => WeightEntry.fromJson(e))
                 .toList() ??
@@ -255,6 +260,7 @@ class UserProfile {
         'quickAddOz': quickAddOz,
         'preferredCupMl': preferredCupMl,
         'waterSetupComplete': waterSetupComplete,
+        'waterRemindersEnabled': waterRemindersEnabled,
         'weightHistory': weightHistory.map((e) => e.toJson()).toList(),
         'lastWeightUpdate': lastWeightUpdate?.toIso8601String(),
       };

@@ -252,23 +252,29 @@ class _WaterScreenState extends State<WaterScreen> {
     final profile = state.profile;
     if (profile == null) return;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _WaterSettingsSheet(
-        profile: profile,
-        isOz: _isOz,
-        onSave: ({required int goalMl, required int wakeHour, required int sleepHour, required List<int> quickMl, required List<int> quickOz, int? preferredCupMl}) {
-          state.updateWaterSchedule(
-            goalMl: goalMl,
-            wakeHour: wakeHour,
-            sleepHour: sleepHour,
-            quickAddMl: quickMl,
-            quickAddOz: quickOz,
-            preferredCupMl: preferredCupMl,
-          );
-        },
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => _WaterSettingsSheet(
+          profile: profile,
+          isOz: _isOz,
+          onSave: ({required int goalMl, required int wakeHour, required int sleepHour, required List<int> quickMl, required List<int> quickOz, int? preferredCupMl, required bool waterRemindersEnabled}) {
+            state.updateWaterSchedule(
+              goalMl: goalMl,
+              wakeHour: wakeHour,
+              sleepHour: sleepHour,
+              quickAddMl: quickMl,
+              quickAddOz: quickOz,
+              preferredCupMl: preferredCupMl,
+              waterRemindersEnabled: waterRemindersEnabled,
+            );
+          },
+        ),
+        transitionsBuilder: (_, anim, __, child) => SlideTransition(
+          position: anim.drive(Tween(begin: const Offset(-1, 0), end: Offset.zero).chain(CurveTween(curve: Curves.easeOutCubic))),
+          child: child,
+        ),
+        transitionDuration: const Duration(milliseconds: 500),
       ),
     );
   }
@@ -504,6 +510,7 @@ class _WaterSettingsSheet extends StatefulWidget {
     required List<int> quickMl,
     required List<int> quickOz,
     int? preferredCupMl,
+    required bool waterRemindersEnabled,
   }) onSave;
 
   @override
@@ -532,6 +539,7 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
     _quickMl = List<int>.from(widget.profile.quickAddMl);
     _quickOz = List<int>.from(widget.profile.quickAddOz);
     _preferredCupMl = widget.profile.preferredCupMl;
+    _remindersOn = widget.profile.waterRemindersEnabled == true;
     if (_preferredCupMl != null) {
       _cupCtrl.text = _cupIsOz 
           ? ( _preferredCupMl! / 29.5735).toStringAsFixed(0)
@@ -586,6 +594,7 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
       quickMl: _quickMl,
       quickOz: _quickOz,
       preferredCupMl: _preferredCupMl,
+      waterRemindersEnabled: _remindersOn,
     );
 
     if (_remindersOn) {
@@ -608,27 +617,22 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
     final autoDoses = preview.waterIntervals;
     final perDrink = preview.perDrinkMl;
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.8,
-      maxChildSize: 0.9,
-      minChildSize: 0.5,
-      builder: (ctx, scrollCtrl) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
         ),
-        child: ListView(
-          controller: scrollCtrl,
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          children: [
-            Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: AppColors.cardBorder, borderRadius: BorderRadius.circular(2)))),
-            const SizedBox(height: 14),
-            Row(children: [
-              const Icon(Icons.settings_rounded, color: AppColors.water, size: 16),
-              const SizedBox(width: 8),
-              Text('إعدادات الماء', style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            ]),
-            const SizedBox(height: 12),
+        title: Text('إعدادات الماء', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+        children: [
+          const SizedBox(height: 4),
             _SettingSection(title: '🎯 هدف الماء اليومي', child: Column(children: [
               Text(_display(_goalMl), style: GoogleFonts.cairo(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.water)),
               Text(_displayLiter(_goalMl), style: GoogleFonts.cairo(fontSize: 12, color: AppColors.textSecondary)),
@@ -660,7 +664,7 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'الموصى به بناءً على وزنك: ${_display(recommended.toDouble())} (${_displayLiter(recommended.toDouble())})',
+                        'الاحتياج الموصى به حسب معايير (الوزن المثالي): ${_display(recommended.toDouble())} (${_displayLiter(recommended.toDouble())})',
                         style: GoogleFonts.cairo(fontSize: 11, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -800,21 +804,6 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
             ])),
             const SizedBox(height: 16),
             
-            // ── Test Notification Button ──
-            Center(
-              child: TextButton.icon(
-                onPressed: () async {
-                  final isFemale = state.profile?.gender == 'female';
-                  await NotificationService().showImmediateTestNotification(isFemale: isFemale);
-                  if (context.mounted) {
-                    AppNotifications.showTop(context, isFemale ? 'أبشري، بيجيك تنبيه تجريبي خلال 5 ثواني.. جربي تطلعين من التطبيق الحين!' : 'أبشر، بيجيك تنبيه تجريبي خلال 5 ثواني.. جرب تطلع من التطبيق الحين!', isError: false);
-                  }
-                },
-                icon: const Icon(Icons.notifications_active_outlined, size: 18, color: AppColors.water),
-                label: Text('تجربة إرسال تنبيه تجريبي', style: GoogleFonts.cairo(fontSize: 12, color: AppColors.water, fontWeight: FontWeight.bold)),
-              ),
-            ),
-            
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -830,7 +819,6 @@ class _WaterSettingsSheetState extends State<_WaterSettingsSheet> {
             ),
           ],
         ),
-      ),
     );
   }
 }

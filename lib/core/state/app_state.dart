@@ -208,6 +208,47 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> removeWeightEntry(String id) async {
+    if (_profile == null) return;
+    
+    // Don't allow removing the initial weight entry to avoid 0 history
+    if (id == 'initial') return;
+
+    final history = List<WeightEntry>.from(_profile!.weightHistory);
+    history.removeWhere((e) => e.id == id);
+    
+    final newWeight = history.isNotEmpty ? history.last.weightKg : _profile!.weightKg;
+    final lastDate = history.isNotEmpty ? history.last.date : _profile!.lastWeightUpdate;
+
+    // Recalculate only if the latest weight changed
+    double weightToCalculateWith = newWeight;
+    if (_profile!.goal == 'lose') {
+      final ideal = CalorieCalculator.idealWeight(heightCm: _profile!.heightCm, age: _profile!.age);
+      if (newWeight > ideal) {
+        weightToCalculateWith = ideal;
+      }
+    }
+    final bmr = CalorieCalculator.bmr(
+      weightKg: weightToCalculateWith,
+      heightCm: _profile!.heightCm,
+      age: _profile!.age,
+      gender: _profile!.gender,
+    );
+    final tdeeVal = CalorieCalculator.tdee(bmr: bmr, activityLevel: _profile!.activityLevel);
+    final newGoalKcal = CalorieCalculator.goalCalories(tdee: tdeeVal, goal: _profile!.goal, gender: _profile!.gender);
+    final newWaterGoal = CalorieCalculator.waterGoalMl(weightKg: newWeight, gender: _profile!.gender, activityLevel: _profile!.activityLevel);
+
+    _profile = _profile!.copyWith(
+      weightKg: newWeight,
+      tdeeKcal: newGoalKcal,
+      waterGoalMl: newWaterGoal,
+      weightHistory: history,
+      lastWeightUpdate: lastDate,
+    );
+    await _saveProfile();
+    notifyListeners();
+  }
+
   Future<void> addFoodEntry(FoodEntry entry) async {
     _foodEntries.add(entry);
     await _saveFood();
@@ -278,6 +319,7 @@ class AppState extends ChangeNotifier {
     List<int>? quickAddMl,
     List<int>? quickAddOz,
     int? preferredCupMl,
+    bool? waterRemindersEnabled,
     bool clearPreferredCup = false,
   }) async {
     if (_profile != null) {
@@ -289,6 +331,7 @@ class AppState extends ChangeNotifier {
         quickAddOz: quickAddOz,
         preferredCupMl: preferredCupMl,
         waterSetupComplete: true,
+        waterRemindersEnabled: waterRemindersEnabled,
         clearPreferredCup: clearPreferredCup,
       );
       await _saveProfile();

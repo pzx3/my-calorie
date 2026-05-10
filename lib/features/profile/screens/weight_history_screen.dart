@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/models/weight_entry.dart';
+import '../../../core/utils/app_notifications.dart';
 
 class WeightHistoryScreen extends StatefulWidget {
   const WeightHistoryScreen({super.key});
@@ -71,6 +72,24 @@ class _WeightHistoryScreenState extends State<WeightHistoryScreen> {
   }
 
   void _showAddWeightDialog(BuildContext context, AppState state) {
+    final history = state.profile?.weightHistory ?? [];
+    if (history.isNotEmpty) {
+      final lastDate = history.last.date;
+      final daysSince = DateTime.now().difference(lastDate).inDays;
+      if (daysSince < 7) {
+        final daysLeft = 7 - daysSince;
+        final isFemale = state.profile?.gender == 'female';
+        AppNotifications.showTop(
+          context,
+          isFemale 
+              ? 'ما يمديك تسجلين الحين! باقي $daysLeft أيام على تسجيل وزنك الأسبوعي ⏳' 
+              : 'ما يمديك تسجل الحين! باقي $daysLeft أيام على تسجيل وزنك الأسبوعي ⏳',
+          isError: true,
+        );
+        return;
+      }
+    }
+
     final ctrl = TextEditingController(text: state.profile?.weightKg.toString());
     showDialog(
       context: context,
@@ -196,10 +215,52 @@ class _WeightListItem extends StatelessWidget {
             const SizedBox(height: 4),
             Text('${entry.weightKg} كجم', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           ]),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-            child: Text('متوسط الأسبوع', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                child: Text('متوسط الأسبوع', style: GoogleFonts.cairo(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)),
+              ),
+              if (entry.id != 'initial') ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded, color: AppColors.coral, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: AppColors.surface,
+                        title: Text('حذف السجل', style: GoogleFonts.cairo(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                        content: Text(
+                          state.profile?.gender == 'female' 
+                            ? 'هل أنتِ متأكدة من حذف سجل هذا الأسبوع؟' 
+                            : 'هل أنت متأكد من حذف سجل هذا الأسبوع؟', 
+                          style: GoogleFonts.cairo(color: AppColors.textSecondary)
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text('إلغاء', style: GoogleFonts.cairo(color: AppColors.textSecondary)),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              state.removeWeightEntry(entry.id);
+                              Navigator.pop(ctx);
+                              AppNotifications.showTop(context, 'تم حذف السجل بنجاح', isError: false);
+                            },
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.coral),
+                            child: Text('حذف', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ],
           ),
         ]),
         const SizedBox(height: 12),
@@ -237,7 +298,12 @@ class _EmptyState extends StatelessWidget {
       const SizedBox(height: 16),
       Text('ما فيه سجل أوزان للحين', style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
       const SizedBox(height: 8),
-      Text('سجل وزنك كل أسبوع عشان تتابع تطورك الحقيقي!', style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textHint)),
+      Text(
+        context.read<AppState>().profile?.gender == 'female' 
+            ? 'سجلي وزنك كل أسبوع عشان تتابعين تطورك الحقيقي!' 
+            : 'سجل وزنك كل أسبوع عشان تتابع تطورك الحقيقي!', 
+        style: GoogleFonts.cairo(fontSize: 14, color: AppColors.textHint)
+      ),
       const SizedBox(height: 24),
       ElevatedButton.icon(
         onPressed: onAdd,
